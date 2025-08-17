@@ -1,9 +1,9 @@
 numpy==1.23.5
+chromadb==0.4.24
 streamlit
 pandas
 python-dotenv
 plotly
-chromadb==0.4.24
 sentence-transformers
 scikit-learn
 joblib

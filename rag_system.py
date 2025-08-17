@@ -5,6 +5,13 @@ import requests
 from typing import List, Dict, Optional
 import numpy as np
 
+if not hasattr(np, "uint"):
+    np.uint = np.uint32
+if not hasattr(np, "int_"):
+    np.int_ = int
+if not hasattr(np, "float_"):
+    np.float_ = float
+
 # RAG imports - with proper error handling
 try:
     import chromadb
