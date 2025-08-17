@@ -1,58 +1,210 @@
 import pandas as pd
 import string
 import joblib
+import os
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from imblearn.over_sampling import SMOTE
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from catboost import CatBoostClassifier
+import numpy as np
 
-# Load and label data
-fake_df = pd.read_csv("Fake.csv")
-real_df = pd.read_csv("True.csv")
-fake_df["label"] = 0
-real_df["label"] = 1
-df = pd.concat([fake_df, real_df])
-df = df[["title", "text", "label"]].dropna()
-df["combined"] = df["title"] + " " + df["text"]
-
-# Clean text
 def clean_text(text):
-    text = text.lower()
-    return ''.join([c for c in text if c not in string.punctuation])
+    """Clean and preprocess text"""
+    if pd.isna(text):
+        return ""
+    text = str(text).lower()
+    # Remove punctuation but keep spaces
+    text = ''.join([c if c not in string.punctuation else ' ' for c in text])
+    # Remove extra spaces
+    text = ' '.join(text.split())
+    return text
 
-df["combined"] = df["combined"].apply(clean_text)
+def load_and_prepare_data():
+    """Load and prepare the training data"""
+    print("📊 Loading data...")
+    
+    # Check if data files exist
+    if not os.path.exists("Fake.csv") or not os.path.exists("True.csv"):
+        print("❌ Error: Fake.csv and True.csv files not found!")
+        print("Please download the dataset from:")
+        print("https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset")
+        return None, None, None, None
+    
+    # Load data
+    fake_df = pd.read_csv("Fake.csv")
+    real_df = pd.read_csv("True.csv")
+    
+    # Add labels
+    fake_df["label"] = 0  # Fake news
+    real_df["label"] = 1  # Real news
+    
+    # Combine datasets
+    df = pd.concat([fake_df, real_df], ignore_index=True)
+    
+    # Select relevant columns and clean
+    df = df[["title", "text", "label"]].dropna()
+    df["combined"] = df["title"].astype(str) + " " + df["text"].astype(str)
+    df["combined"] = df["combined"].apply(clean_text)
+    
+    print(f"✅ Data loaded successfully!")
+    print(f"   Total articles: {len(df)}")
+    print(f"   Real news: {len(df[df['label'] == 1])}")
+    print(f"   Fake news: {len(df[df['label'] == 0])}")
+    
+    return df["combined"], df["label"], df, None
 
-# Split
-X_train, X_test, y_train, y_test = train_test_split(df["combined"], df["label"], test_size=0.2, random_state=42)
+def create_vectorizer_and_split(X, y):
+    """Create TF-IDF vectorizer and split data"""
+    print("\n🔄 Creating vectorizer and splitting data...")
+    
+    # Split data
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, random_state=42, stratify=y
+    )
+    
+    # Create and fit TF-IDF vectorizer
+    vectorizer = TfidfVectorizer(
+        stop_words="english",
+        max_df=0.7,
+        min_df=2,
+        max_features=10000,
+        ngram_range=(1, 2)
+    )
+    
+    X_train_vec = vectorizer.fit_transform(X_train)
+    X_test_vec = vectorizer.transform(X_test)
+    
+    print(f"   Training samples: {X_train_vec.shape[0]}")
+    print(f"   Test samples: {X_test_vec.shape[0]}")
+    print(f"   Features: {X_train_vec.shape[1]}")
+    
+    return X_train_vec, X_test_vec, y_train, y_test, vectorizer
 
-# TF-IDF vectorizer
-vectorizer = TfidfVectorizer(stop_words="english", max_df=0.7)
-X_train_vec = vectorizer.fit_transform(X_train)
-X_test_vec = vectorizer.transform(X_test)
+def apply_smote(X_train_vec, y_train):
+    """Apply SMOTE for class balancing"""
+    print("\n⚖️ Applying SMOTE for class balancing...")
+    
+    smote = SMOTE(random_state=42, k_neighbors=3)
+    X_train_bal, y_train_bal = smote.fit_resample(X_train_vec, y_train)
+    
+    print(f"   Original training samples: {X_train_vec.shape[0]}")
+    print(f"   Balanced training samples: {X_train_bal.shape[0]}")
+    
+    return X_train_bal, y_train_bal
 
-# SMOTE for class balancing
-smote = SMOTE(random_state=42)
-X_train_bal, y_train_bal = smote.fit_resample(X_train_vec, y_train)
+def train_and_evaluate_models(X_train_bal, y_train_bal, X_test_vec, y_test):
+    """Train and evaluate all models"""
+    print("\n🤖 Training models...")
+    
+    models = {
+        "naive_bayes": MultinomialNB(alpha=0.1),
+        "logistic_regression": LogisticRegression(
+            max_iter=1000, 
+            C=1.0, 
+            random_state=42
+        ),
+        "random_forest": RandomForestClassifier(
+            n_estimators=100,
+            max_depth=20,
+            random_state=42,
+            n_jobs=-1
+        ),
+        "catboost": CatBoostClassifier(
+            iterations=500,
+            depth=6,
+            learning_rate=0.1,
+            verbose=0,
+            random_state=42
+        )
+    }
+    
+    model_results = {}
+    
+    for name, model in models.items():
+        print(f"\n🔧 Training {name.replace('_', ' ').title()}...")
+        
+        try:
+            # Train model
+            model.fit(X_train_bal, y_train_bal)
+            
+            # Make predictions
+            y_pred = model.predict(X_test_vec)
+            
+            # Calculate metrics
+            accuracy = accuracy_score(y_test, y_pred)
+            
+            # Save model
+            model_filename = f"model_{name}.pkl"
+            joblib.dump(model, model_filename)
+            
+            # Store results
+            model_results[name] = {
+                "model": model,
+                "accuracy": accuracy,
+                "predictions": y_pred
+            }
+            
+            print(f"   ✅ {name} trained successfully!")
+            print(f"   📈 Accuracy: {accuracy:.4f}")
+            print(f"   💾 Saved as: {model_filename}")
+            
+            # Print detailed classification report
+            print(f"\n📊 Classification Report for {name.replace('_', ' ').title()}:")
+            print(classification_report(y_test, y_pred, 
+                                      target_names=['Fake', 'Real']))
+            
+        except Exception as e:
+            print(f"   ❌ Error training {name}: {e}")
+            continue
+    
+    return model_results
 
-# Save vectorizer
-joblib.dump(vectorizer, "vectorizer.pkl")
+def main():
+    """Main function to orchestrate the training process"""
+    print("🚀 Starting Fake News Detection Model Training")
+    print("=" * 50)
+    
+    # Load and prepare data
+    X, y, df, _ = load_and_prepare_data()
+    if X is None:
+        return
+    
+    # Create vectorizer and split data
+    X_train_vec, X_test_vec, y_train, y_test, vectorizer = create_vectorizer_and_split(X, y)
+    
+    # Save vectorizer
+    joblib.dump(vectorizer, "vectorizer.pkl")
+    print(f"\n💾 Vectorizer saved as: vectorizer.pkl")
+    
+    # Apply SMOTE
+    X_train_bal, y_train_bal = apply_smote(X_train_vec, y_train)
+    
+    # Train and evaluate models
+    model_results = train_and_evaluate_models(X_train_bal, y_train_bal, X_test_vec, y_test)
+    
+    # Summary
+    print("\n" + "=" * 50)
+    print("📋 TRAINING SUMMARY")
+    print("=" * 50)
+    
+    if model_results:
+        print(f"✅ Successfully trained {len(model_results)} models:")
+        for name, results in model_results.items():
+            print(f"   • {name.replace('_', ' ').title()}: {results['accuracy']:.4f} accuracy")
+        
+        # Find best model
+        best_model = max(model_results.items(), key=lambda x: x[1]['accuracy'])
+        print(f"\n🏆 Best performing model: {best_model[0].replace('_', ' ').title()}")
+        print(f"   📈 Best accuracy: {best_model[1]['accuracy']:.4f}")
+    else:
+        print("❌ No models were successfully trained!")
+    
+    print("\n🎉 Training complete! You can now run the Streamlit app.")
+    print("   Command: streamlit run app.py")
 
-# Train models
-models = {
-    "naive_bayes": MultinomialNB(),
-    "logistic_regression": LogisticRegression(max_iter=1000),
-    "random_forest": RandomForestClassifier(),
-    "catboost": CatBoostClassifier(verbose=0)
-}
-
-for name, model in models.items():
-    model.fit(X_train_bal, y_train_bal)
-    joblib.dump(model, f"model_{name}.pkl")
-    y_pred = model.predict(X_test_vec)
-    print(f"\n📊 {name.upper()}:\n", classification_report(y_test, y_pred))
-
-print("✅ All models and vectorizer saved.")
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,135 @@
+[
+  {
+    "id": "fact_001",
+    "content": "The Earth is round and orbits the Sun. This has been scientifically proven.",
+    "category": "science",
+    "verified": true,
+    "sources": [
+      "NASA",
+      "Scientific consensus"
+    ]
+  },
+  {
+    "id": "fact_002",
+    "content": "Vaccines are safe and effective for preventing diseases when approved by health authorities.",
+    "category": "health",
+    "verified": true,
+    "sources": [
+      "WHO",
+      "CDC",
+      "FDA"
+    ]
+  },
+  {
+    "id": "fact_003",
+    "content": "Climate change is real and primarily caused by human activities according to scientific consensus.",
+    "category": "environment",
+    "verified": true,
+    "sources": [
+      "IPCC",
+      "NASA",
+      "NOAA"
+    ]
+  },
+  {
+    "id": "fact_004",
+    "content": "5G technology does not cause COVID-19 or other health problems according to scientific studies.",
+    "category": "technology",
+    "verified": true,
+    "sources": [
+      "WHO",
+      "FCC",
+      "IEEE"
+    ]
+  },
+  {
+    "id": "fact_656a456c",
+    "content": "A deepfake video shows YS Jagan Mohan Reddy referring to Hindi as the national language.",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Social Media User"
+    ]
+  },
+  {
+    "id": "fact_3714c98a",
+    "content": "The video showing YS Jagan Mohan Reddy saying ‘Hindi is a national language’ is a deepfake.",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Social media users"
+    ]
+  },
+  {
+    "id": "fact_29969928",
+    "content": "Calgary police warned on sexual assault at rodeo in Arabic, Hindi",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Juno News"
+    ]
+  },
+  {
+    "id": "fact_7b445b59",
+    "content": "In an X post, Sonu Nigam criticised BJP MP Tejasvi Surya, saying Kannada films shouldn’t be dubbed in Hindi or released nationwide.",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Social Media User"
+    ]
+  },
+  {
+    "id": "fact_ee9e2438",
+    "content": "Happy Diwali, Pakistan Indian army! Jai Hind #OperationSindoor",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "VishalMalvi_"
+    ]
+  },
+  {
+    "id": "fact_e5a7bd23",
+    "content": "In the viral Hindi tweet which is roughly translated as, “Here, the policemen have given a good prasad to those who created riots in Mewat.”",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "DineshKumarLive"
+    ]
+  },
+  {
+    "id": "fact_bda4dd88",
+    "content": "Elon Musk’s tweet in Hindi stating that ‘Twitter Tere Tukde Honge’ gang should also pay $8",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "SOCIAL MEDIA POST"
+    ]
+  },
+  {
+    "id": "fact_3701d0ac",
+    "content": "A purported tweet of ‘BBC News Hindi’ reporting Shah Rukh Khan’s recent comments about Pakistan",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "SOCIAL MEDIA POST"
+    ]
+  },
+  {
+    "id": "fact_21ca7ea6",
+    "content": "Three health experts – Department of Health Undersecretary Dr. Eric Tayag, Dr. Tony Leachon, and Dr. Freddie Gomez said the following statement found in quote cards used to promote Glufarelin, a product claimed to cure diabetes:\n\n“Makinig sa akin: ang mga tabletas at iniksyon ay hindi maaaring ganap na gamutin ang diabetes, ang aking mga kasamahan at ako ay nakahanap ng isang napaka-epektibong paraan.” (Listen to me: pills and injections cannot totally cure diabetes, my colleagues and I found a very effective way.)",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Manila Hospital News"
+    ]
+  },
+  {
+    "id": "fact_7c95bb2e",
+    "content": "Volunteers at the upcoming Tokyo Olympics will be given medals with the word ‘volunteer’ written in several languages, including ‘swayamsevak’ in Hindi. This shows India’s stature in the world.",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Social media users"
+    ]
+  }
+]
