@@ -1,0 +1,29 @@
+# Core
+streamlit
+pandas
+numpy
+python-dotenv
+
+# Plotly for charts
+plotly
+
+# RAG / Embedding
+chromadb
+sentence-transformers
+
+# Machine Learning
+scikit-learn
+joblib
+nltk
+
+# Google Gemini
+google-generativeai
+
+# API Requests
+requests
+
+# For handling environment + system utils
+python-dateutil
+
+# Optional (for progress bars, better performance)
+tqdm
