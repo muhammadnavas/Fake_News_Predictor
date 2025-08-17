@@ -27,3 +27,5 @@ python-dateutil
 
 # Optional (for progress bars, better performance)
 tqdm
+
+chromadb==0.4.24
