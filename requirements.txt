@@ -1,7 +1,7 @@
 # Core
 streamlit
 pandas
-numpy
+numpy==1.23.5
 python-dotenv
 
 # Plotly for charts
