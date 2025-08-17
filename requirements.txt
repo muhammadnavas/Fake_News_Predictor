@@ -1,29 +1,14 @@
-# Core
+numpy==1.23.5
 streamlit
 pandas
-numpy==1.23.5
 python-dotenv
-
-# Plotly for charts
 plotly
-
-# RAG / Embedding
 chromadb==0.4.24
 sentence-transformers
-
-# Machine Learning
 scikit-learn
 joblib
 nltk
-
-# Google Gemini
 google-generativeai
-
-# API Requests
 requests
-
-# For handling environment + system utils
 python-dateutil
-
-# Optional (for progress bars, better performance)
 tqdm
