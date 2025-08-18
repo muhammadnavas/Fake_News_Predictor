@@ -17,9 +17,9 @@ try:
     import chromadb
     from chromadb.config import Settings
     CHROMADB_AVAILABLE = True
-except ImportError:
+except Exception as e:
+    print("⚠️ ChromaDB not available:", e)
     CHROMADB_AVAILABLE = False
-    print("ChromaDB not available")
 
 try:
     from sentence_transformers import SentenceTransformer
