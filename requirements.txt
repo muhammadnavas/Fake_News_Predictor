@@ -1,5 +1,5 @@
 numpy>=1.26
-chromadb==0.4.24
+chromadb>=0.5.0
 streamlit
 pandas
 python-dotenv
