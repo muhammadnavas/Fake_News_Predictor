@@ -12,11 +12,11 @@ except ImportError:
 # --- API Key Handling ---
 def get_gemini_key() -> str:
     """Fetch Gemini API key safely from env or Streamlit secrets."""
-    key = os.getenv("GEMINI_API_KEY")  # Use GEMINI_API_KEY for consistency
+    key = os.getenv("GEMINI_API")  # Use GEMINI_API_KEY for consistency
     if not key:
         try:
             import streamlit as st
-            key = st.secrets.get("GEMINI_API_KEY", None)
+            key = st.secrets.get("GEMINI_API", None)
         except Exception:
             key = None
 
