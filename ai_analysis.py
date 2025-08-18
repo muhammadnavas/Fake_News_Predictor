@@ -7,15 +7,15 @@ from typing import List, Dict
 load_dotenv()
 
 # Ensure correct key is loaded
-GEMINI_API_KEY = os.getenv("GEMINI")
-if not GEMINI_API_KEY:
-    raise ValueError("❌ GEMINI_API_KEY not found in .env")
+GEMINI = os.getenv("GEMINI")
+if not GEMINI:
+    raise ValueError("❌ GEMINI not found in .env")
 
 # Strip hidden spaces/newlines
-GEMINI_API_KEY = GEMINI_API_KEY.strip()
+GEMINI = GEMINI.strip()
 
 # Initialize Gemini client
-genai.configure(api_key=GEMINI_API_KEY)
+genai.configure(api_key=GEMINI)
 model = genai.GenerativeModel("gemini-2.0-flash")
 
 # RAG-enhanced Gemini analysis
