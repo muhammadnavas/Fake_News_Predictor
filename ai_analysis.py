@@ -12,14 +12,14 @@ except ImportError:
 # --- API Key Handling ---
 def get_gemini_key() -> str:
     """Fetch Gemini API key safely from env or Streamlit secrets."""
-    # Try multiple environment variable names for flexibility
-    key = os.getenv("GEMINI_API_KEY") or os.getenv("GEMINI_API")
+    # Try multiple environment variable names for flexibility (GEMINI_API first since that's what you have)
+    key = os.getenv("GEMINI_API") or os.getenv("GEMINI_API_KEY")
     
     if not key:
         try:
             import streamlit as st
             # Try both possible secret names
-            key = st.secrets.get("GEMINI_API_KEY", None) or st.secrets.get("GEMINI_API", None)
+            key = st.secrets.get("GEMINI_API", None) or st.secrets.get("GEMINI_API_KEY", None)
         except Exception:
             key = None
 
@@ -171,6 +171,34 @@ Format your response clearly with headers and bullet points.
     except Exception as e:
         return f"❌ Error in Gemini analysis: {str(e)}"
 
+# --- Validation function to check all API keys ---
+def validate_api_keys():
+    """Validate and print all API key statuses for debugging."""
+    print("🔍 API Key Validation:")
+    
+    # Check all possible environment variables
+    gemini_api = os.getenv("GEMINI_API")
+    gemini_api_key = os.getenv("GEMINI_API_KEY")
+    newsapi_key = os.getenv("NEWSAPI_KEY")
+    
+    print(f"GEMINI_API: {'✅ Found' if gemini_api else '❌ Missing'}")
+    print(f"GEMINI_API_KEY: {'✅ Found' if gemini_api_key else '❌ Missing'}")
+    print(f"NEWSAPI_KEY: {'✅ Found' if newsapi_key else '❌ Missing'}")
+    
+    # Check Streamlit secrets if available
+    try:
+        import streamlit as st
+        gemini_secret = st.secrets.get("GEMINI_API", None) or st.secrets.get("GEMINI_API_KEY", None)
+        newsapi_secret = st.secrets.get("NEWSAPI_KEY", None)
+        print(f"Streamlit Gemini Secret: {'✅ Found' if gemini_secret else '❌ Missing'}")
+        print(f"Streamlit NewsAPI Secret: {'✅ Found' if newsapi_secret else '❌ Missing'}")
+    except:
+        print("Streamlit secrets: Not available (running locally)")
+    
+    print(f"Final GEMINI_KEY: {'✅ Available' if GEMINI_KEY else '❌ Missing'}")
+    print(f"Final NEWSAPI_KEY: {'✅ Available' if NEWSAPI_KEY else '❌ Missing'}")
+    print(f"Gemini Model: {'✅ Initialized' if model else '❌ Failed'}")
+
 # --- Function to display API status in Streamlit ---
 def display_api_status():
     """Display API key status in Streamlit sidebar or main area."""
@@ -178,6 +206,17 @@ def display_api_status():
         import streamlit as st
         
         st.subheader("🔧 API Configuration Status")
+        
+        # Debug information
+        st.code(f"""
+Debug Info:
+GEMINI_API (env): {os.getenv('GEMINI_API', 'Not found')}
+GEMINI_API_KEY (env): {os.getenv('GEMINI_API_KEY', 'Not found')}
+NEWSAPI_KEY (env): {os.getenv('NEWSAPI_KEY', 'Not found')}
+Final GEMINI_KEY: {'Available' if GEMINI_KEY else 'Missing'}
+Final NEWSAPI_KEY: {'Available' if NEWSAPI_KEY else 'Missing'}
+Model initialized: {'Yes' if model else 'No'}
+        """)
         
         status = check_api_keys()
         
@@ -187,32 +226,26 @@ def display_api_status():
             st.warning("⚠️ Gemini API: Key found but model initialization failed")
         else:
             st.error("❌ Gemini API: Not configured")
-            st.info("💡 Add GEMINI_API_KEY to your Streamlit secrets")
+            st.info("💡 Make sure GEMINI_API is set in your .env file or Streamlit secrets")
         
         if status["newsapi_available"]:
             st.success("✅ NewsAPI: Connected")
         else:
             st.error("❌ NewsAPI: Not configured")
-            st.info("💡 Add NEWSAPI_KEY to your Streamlit secrets")
+            st.info("💡 Make sure NEWSAPI_KEY is set in your .env file or Streamlit secrets")
         
         # Instructions for setting up secrets
-        with st.expander("📋 How to set up API keys in Streamlit Cloud"):
+        with st.expander("📋 How to set up API keys"):
             st.markdown("""
-            **Step 1:** Go to your Streamlit Cloud app dashboard
-            
-            **Step 2:** Click on your app, then go to Settings
-            
-            **Step 3:** In the Secrets section, add:
+            **For Streamlit Cloud:**
             ```toml
-            GEMINI_API_KEY = "your_gemini_api_key_here"
+            GEMINI_API = "your_gemini_api_key_here"
             NEWSAPI_KEY = "your_newsapi_key_here"
             ```
             
-            **Step 4:** Save and restart your app
-            
-            **For local development, create a .env file:**
+            **For local development (.env file):**
             ```
-            GEMINI_API_KEY=your_gemini_api_key_here
+            GEMINI_API=your_gemini_api_key_here
             NEWSAPI_KEY=your_newsapi_key_here
             ```
             """)
@@ -220,3 +253,6 @@ def display_api_status():
     except ImportError:
         # If streamlit is not available, just pass
         pass
+
+# Run validation on import
+validate_api_keys()
