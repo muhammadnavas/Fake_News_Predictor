@@ -8,6 +8,11 @@ from plotly.subplots import make_subplots
 import os
 from dotenv import load_dotenv
 
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+
+
 # Import custom modules
 from fetch_news import get_all_news, comprehensive_news_check
 from rag_system import RAGKnowledgeBase, analyze_against_facts, calculate_kb_confidence, comprehensive_news_check_with_rag, rag_enhanced_gemini_analysis, standard_gemini_analysis, check_rag_health
