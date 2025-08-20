@@ -1,0 +1,14 @@
+FAKE NEWS DETECTION - TRAINING SUMMARY
+==================================================
+
+Successfully trained 4 models:
+
+• Naive Bayes: 0.9549 accuracy
+• Logistic Regression: 0.9888 accuracy
+• Random Forest: 0.9959 accuracy
+• Catboost: 0.9977 accuracy
+
+Best performing model: Catboost
+Best accuracy: 0.9977
+
+Training completed at: 2025-08-20 21:02:53
