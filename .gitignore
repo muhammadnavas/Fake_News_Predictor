@@ -1,2 +1,11 @@
 .env
 .chromadb/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+.streamlit/secrets.toml
+.DS_Store
+Thumbs.db
+

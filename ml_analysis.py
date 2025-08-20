@@ -1,12 +1,11 @@
 import joblib
 import numpy as np
 import os
-from typing import Dict
+from typing import Dict, Optional, Tuple
 import streamlit as st
 
-# Load all ML models
 @st.cache_resource
-def load_all_models():
+def load_all_models() -> Tuple[Optional[Dict], Optional[object]]:
     """Load all available ML models and vectorizer from models folder"""
     models = {}
     models_dir = "models"
@@ -20,7 +19,7 @@ def load_all_models():
     
     # Check if models directory exists
     if not os.path.exists(models_dir):
-        st.error(f"❌ Models folder '{models_dir}' not found. Please run train_models.py first.")
+        st.error(f"❌ Models folder '{models_dir}' not found. Please run train_model.py first.")
         return None, None
     
     # Load vectorizer
@@ -29,7 +28,7 @@ def load_all_models():
         vectorizer = joblib.load(vectorizer_path)
         st.success("✅ Vectorizer loaded successfully")
     except FileNotFoundError:
-        st.error(f"❌ Vectorizer not found at {vectorizer_path}. Please run train_models.py first.")
+        st.error(f"❌ Vectorizer not found at {vectorizer_path}. Please run train_model.py first.")
         return None, None
     except Exception as e:
         st.error(f"❌ Error loading vectorizer: {str(e)}")
@@ -50,10 +49,19 @@ def load_all_models():
     if loaded_count > 0:
         st.success(f"✅ Successfully loaded {loaded_count} out of {len(model_files)} models")
     else:
-        st.error("❌ No models could be loaded. Please check your models folder and run train_models.py")
+        st.error("❌ No models could be loaded. Please check your models folder and run train_model.py")
         return None, None
     
     return models, vectorizer
+
+def clean_text(text: str) -> str:
+    """Clean and preprocess text"""
+    if not text:
+        return ""
+    text = text.lower().strip()
+    # Basic cleaning - remove extra spaces
+    text = ' '.join(text.split())
+    return text
 
 def analyze_with_all_models(text: str, models: Dict, vectorizer) -> Dict:
     """Analyze text with all available ML models"""
@@ -64,7 +72,7 @@ def analyze_with_all_models(text: str, models: Dict, vectorizer) -> Dict:
     
     try:
         # Preprocess and vectorize the input text
-        processed_text = text.lower().strip()
+        processed_text = clean_text(text)
         input_vector = vectorizer.transform([processed_text])
     except Exception as e:
         st.error(f"❌ Error processing text: {str(e)}")
@@ -89,7 +97,7 @@ def analyze_with_all_models(text: str, models: Dict, vectorizer) -> Dict:
                     real_prob = probabilities[0] if prediction == 1 else 1 - probabilities[0]
                     
             except AttributeError:
-                # Model doesn't support predict_proba (like some ensemble methods)
+                # Model doesn't support predict_proba
                 confidence = 0.8  # Default confidence
                 fake_prob = 0.0 if prediction == 1 else 1.0
                 real_prob = 1.0 if prediction == 1 else 0.0
@@ -148,29 +156,3 @@ def get_ensemble_prediction(results: Dict) -> Dict:
         "total_models": len(successful_results),
         "voting_consensus": round((max(fake_votes, real_votes) / len(successful_results)) * 100, 1)
     }
-
-def display_model_info():
-    """Display information about loaded models"""
-    models_dir = "models"
-    
-    if os.path.exists(models_dir):
-        st.sidebar.subheader("📁 Models Folder Info")
-        
-        # List all files in models directory
-        try:
-            model_files = [f for f in os.listdir(models_dir) if f.endswith('.pkl')]
-            if model_files:
-                st.sidebar.write("**Available Model Files:**")
-                for file in sorted(model_files):
-                    file_path = os.path.join(models_dir, file)
-                    file_size = os.path.getsize(file_path) / (1024 * 1024)  # Size in MB
-                    st.sidebar.write(f"• {file} ({file_size:.1f} MB)")
-            else:
-                st.sidebar.warning("No .pkl files found in models folder")
-                
-        except Exception as e:
-            st.sidebar.error(f"Error reading models folder: {str(e)}")
-    else:
-        st.sidebar.error("Models folder not found!")
-        st.sidebar.write("**To create models:**")
-        st.sidebar.code("python train_models.py", language="bash")
