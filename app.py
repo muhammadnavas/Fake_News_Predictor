@@ -188,18 +188,25 @@ st.info(
     "Personal statements or casual text may not be analyzed correctly."
 )
 
+# Ensure input is bound to session_state
+if "selected_text" not in st.session_state:
+    st.session_state.selected_text = ""
+
+# Clear validation state button
 if st.button("🔄 Clear State", help="Clear validation cache for fresh analysis"):
     reset_content_validation_state()
-    st.session_state.selected_text = ""
-    st.success("✅ Validation cache cleared and input reset!")
-    st.rerun()
+    st.session_state.selected_text = ""  # Clear input text
+    st.rerun()  # <-- Use this instead of experimental_rerun
 
+# Input text area, bound to session_state
 input_text = st.text_area(
     "Paste news headline or article text:",
-    value=st.session_state.get("selected_text", ""),
+    value=st.session_state.selected_text,
+    key="selected_text",  # bind directly to session_state
     height=120,
     placeholder="Example: 'Breaking: Government announces new policy...' or 'Local authorities report incident...'",
 )
+
 
 # Real-time content validation
 content_analysis = None
