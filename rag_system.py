@@ -176,7 +176,7 @@ class RAGKnowledgeBase:
             if self.fact_database:
                 fact_texts = [fact['content'] for fact in self.fact_database]
                 self.fact_vectors = self.vectorizer.fit_transform(fact_texts)
-                st.info("ℹ️ Using TF-IDF fallback for RAG functionality")
+                st.toast("ℹ️ Using TF-IDF fallback for RAG functionality")
             else:
                 st.warning("⚠️ No fact database available for RAG")
         except Exception as e:
