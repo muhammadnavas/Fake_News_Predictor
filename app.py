@@ -62,7 +62,7 @@ from content_detector import (  # noqa: E402
 
 # ── Streamlit page configuration MUST be the first Streamlit call ───────────────
 st.set_page_config(
-    page_title="🔍 RAG-Enhanced Fake News Detector",
+    page_title="🔍 RAG-Enhanced News Predictor",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -82,7 +82,7 @@ if missing_keys:
     st.stop()
 
 # ── Title / Header ──────────────────────────────────────────────────────────────
-st.title("🔍 RAG-Enhanced Fake News Predictor")
+st.title("🔍 RAG-Enhanced News Predictor")
 st.markdown("**Multi-API News Verification** • **RAG Technology** • **AI-Powered Assessment**")
 st.markdown("---")
 
