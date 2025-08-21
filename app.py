@@ -188,12 +188,11 @@ st.info(
     "Personal statements or casual text may not be analyzed correctly."
 )
 
-# Clear validation state button
-_, col_clear = st.columns([3, 1])
-with col_clear:
-    if st.button("🔄 Clear State", help="Clear validation cache for fresh analysis"):
-        reset_content_validation_state()
-        st.rerun()
+if st.button("🔄 Clear State", help="Clear validation cache for fresh analysis"):
+    reset_content_validation_state()
+    st.session_state.selected_text = ""
+    st.success("✅ Validation cache cleared and input reset!")
+    st.rerun()
 
 input_text = st.text_area(
     "Paste news headline or article text:",
