@@ -83,7 +83,7 @@ if missing_keys:
 
 # ── Title / Header ──────────────────────────────────────────────────────────────
 st.title("🔍 RAG-Enhanced Fake News Predictor")
-st.markdown("**Multi-API News Verification** • **RAG Technology** • **AI-Powered Assessment**")
+st.markdown("**Multi-API News Verification** • **RAG Technology** • **ML-Powered Assessment** • **AI-Powered Assessment**")
 st.markdown("---")
 
 # ── Initialize RAG system quietly with robust error reporting ───────────────────
