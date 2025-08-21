@@ -131,5 +131,86 @@
     "sources": [
       "Social media users"
     ]
+  },
+  {
+    "id": "fact_a934a9f9",
+    "content": "Video of Maratha activist assault in Maharashtra shared with false political and caste angle; details inside",
+    "category": "factcheck",
+    "verified": false,
+    "sources": [
+      "Press Trust of India"
+    ]
+  },
+  {
+    "id": "fact_358db184",
+    "content": "Political coalition names Peter Obi as their presidential candidate",
+    "category": "factcheck",
+    "verified": false,
+    "sources": [
+      "AFP Fact Check"
+    ]
+  },
+  {
+    "id": "fact_cec2ff4f",
+    "content": "Tim Walz ordered a \"political hit\" on his rivals",
+    "category": "factcheck",
+    "verified": false,
+    "sources": [
+      "AFP Fact Check"
+    ]
+  },
+  {
+    "id": "fact_62af8e26",
+    "content": "What We Know about Minnesota shooting suspect Vance Boelter's political affiliation",
+    "category": "factcheck",
+    "verified": false,
+    "sources": [
+      "Lead Stories"
+    ]
+  },
+  {
+    "id": "fact_dac8e3b5",
+    "content": "This video shows Israel hitting locations of top political and military figures in the Iranian capital of Tehran.",
+    "category": "factcheck",
+    "verified": false,
+    "sources": [
+      "India Today"
+    ]
+  },
+  {
+    "id": "fact_dd5a037f",
+    "content": "Visuals showing attack on Biharis in Tamil Nadu for speaking Hindi.",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "SOCIAL MEDIA POST"
+    ]
+  },
+  {
+    "id": "fact_45e735d1",
+    "content": "Several videos with allegations of violence against Hindi-speaking people are from Tamil Nadu",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Jai Prakash Gupta"
+    ]
+  },
+  {
+    "id": "fact_c591bd1d",
+    "content": "Olympics will issue medals in Hindi to Indian sportspersons",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Users of social media"
+    ]
+  },
+  {
+    "id": "fact_05350ad2",
+    "content": "The viral tweet in Hindi is roughly translated as, “ Don’t know where this video is from, but strict action should be taken against these savage policemen, the government has filled so much hatred that people have come down to brutality”",
+    "category": "factcheck",
+    "verified": true,
+    "sources": [
+      "Newztruth"
+    ]
   }
 ]

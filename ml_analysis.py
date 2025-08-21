@@ -4,55 +4,43 @@ import os
 from typing import Dict, Optional, Tuple
 import streamlit as st
 
-@st.cache_resource
-def load_all_models() -> Tuple[Optional[Dict], Optional[object]]:
-    """Load all available ML models and vectorizer from models folder"""
+import os
+import joblib
+from typing import Dict, Optional, Tuple
+import streamlit as st
+
+def load_all_models() -> Tuple[Optional[Dict[str, object]], Optional[object]]:
+    """Load ML models and vectorizer from models folder."""
     models = {}
     models_dir = "models"
-    
+
     model_files = {
         "Naive Bayes": "model_naive_bayes.pkl",
-        "Logistic Regression": "model_logistic_regression.pkl", 
+        "Logistic Regression": "model_logistic_regression.pkl",
         "Random Forest": "model_random_forest.pkl",
         "CatBoost": "model_catboost.pkl"
     }
-    
-    # Check if models directory exists
+
     if not os.path.exists(models_dir):
-        st.error(f"❌ Models folder '{models_dir}' not found. Please run train_model.py first.")
         return None, None
-    
+
     # Load vectorizer
     vectorizer_path = os.path.join(models_dir, "vectorizer.pkl")
     try:
         vectorizer = joblib.load(vectorizer_path)
-        st.success("✅ Vectorizer loaded successfully")
-    except FileNotFoundError:
-        st.error(f"❌ Vectorizer not found at {vectorizer_path}. Please run train_model.py first.")
+    except Exception:
         return None, None
-    except Exception as e:
-        st.error(f"❌ Error loading vectorizer: {str(e)}")
-        return None, None
-    
-    # Load all models
-    loaded_count = 0
+
+    # Load models
     for model_name, file_name in model_files.items():
         model_path = os.path.join(models_dir, file_name)
         try:
             models[model_name] = joblib.load(model_path)
-            loaded_count += 1
-        except FileNotFoundError:
-            st.warning(f"⚠️ {model_name} model not found at {model_path}")
-        except Exception as e:
-            st.warning(f"⚠️ Error loading {model_name}: {str(e)}")
-    
-    if loaded_count > 0:
-        st.success(f"✅ Successfully loaded {loaded_count} out of {len(model_files)} models")
-    else:
-        st.error("❌ No models could be loaded. Please check your models folder and run train_model.py")
-        return None, None
-    
+        except Exception:
+            continue  # Skip missing models
+
     return models, vectorizer
+
 
 def clean_text(text: str) -> str:
     """Clean and preprocess text"""
