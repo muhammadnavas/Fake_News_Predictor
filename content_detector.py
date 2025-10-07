@@ -182,6 +182,27 @@ def detect_content_type(text: str) -> Dict:
         word_count >= 8
     )
 
+    # ------------------------------------------------------------------
+    # Alternate heuristic: Some legitimate analytical / investigative
+    # headlines or summaries lack our strict pattern keywords (e.g., no
+    # 'breaking', 'according to', etc.) but are still valid news-like
+    # content. Allow classification if:
+    #   - sufficient length (>= 12 words)
+    #   - at least 2 proper nouns (entities / capitalized words fallback)
+    #   - base score moderately high (>= 25)
+    #   - no strong disqualifiers (personal/casual/test)
+    # This reduces false negatives like the user's example headline.
+    # ------------------------------------------------------------------
+    if (not is_news and
+        word_count >= 12 and
+        proper_noun_count >= 2 and
+        news_score >= 25 and
+        personal_matches == 0 and
+        casual_matches == 0 and
+        test_matches == 0):
+        is_news = True
+        reasons.append("Alternate heuristic: length + proper nouns + score indicates news-like content")
+
     if content_type == "unknown":
         content_type = "potential_news" if is_news else "non_news"
 

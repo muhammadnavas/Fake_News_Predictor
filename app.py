@@ -1,9 +1,29 @@
 import os
 from datetime import datetime
 
+import streamlit as st  # MUST be imported before any module that uses Streamlit
+
+# ----------------------------------------------------------------------------------
+# IMPORTANT: set_page_config MUST be the very first Streamlit command.
+# Some imported modules (e.g., rag_system) call st.toast() during import/initialization.
+# To avoid the "set_page_config can only be called once" error, we configure the page
+# immediately and guard against accidental re-calls.
+# ----------------------------------------------------------------------------------
+if not st.session_state.get("_page_configured", False):
+    try:
+        st.set_page_config(
+            page_title="🔍 RAG-Enhanced Fake News Predictor",
+            layout="wide",
+            initial_sidebar_state="expanded",
+        )
+    except Exception:
+        # If already configured (e.g., in multipage context), ignore silently.
+        pass
+    st.session_state["_page_configured"] = True
+
+# Defer heavier imports until after page config
 import numpy as np
 import pandas as pd
-import streamlit as st
 from dotenv import load_dotenv
 
 # Plotly (px is currently unused, but keeping import in case you add charts later)
@@ -63,19 +83,22 @@ from content_detector import (  # noqa: E402
     validate_news_content,
 )
 
-# ── Streamlit page configuration MUST be the first Streamlit call ───────────────
-st.set_page_config(
-    page_title="🔍 RAG-Enhanced Fake News Predictor",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
+# (Page config already set above; section retained for readability/documentation.)
 
 # ── Load environment variables and validate critical keys ───────────────────────
 load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
-GNEWS_KEY = os.getenv("GNEWS_KEY")
-CURRENTS_KEY = os.getenv("CURRENTS_KEY")
+
+# Prefer Streamlit secrets if present; fallback to environment variables
+def _get_secret(name: str):
+    try:
+        return st.secrets.get(name)  # type: ignore[attr-defined]
+    except Exception:
+        return None
+
+GEMINI_API_KEY = _get_secret("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+NEWSAPI_KEY = _get_secret("NEWSAPI_KEY") or os.getenv("NEWSAPI_KEY")
+GNEWS_KEY = _get_secret("GNEWS_KEY") or os.getenv("GNEWS_KEY")
+CURRENTS_KEY = _get_secret("CURRENTS_KEY") or os.getenv("CURRENTS_KEY")
 
 required_keys = {"GEMINI_API_KEY": GEMINI_API_KEY, "NEWSAPI_KEY": NEWSAPI_KEY}
 missing_keys = [key for key, value in required_keys.items() if not value]
@@ -252,7 +275,7 @@ if input_text and input_text.strip():
             analysis_allowed = False
 
 # ── Analysis options (added missing Force Analysis) ─────────────────────────────
-c1, c2, c3, c4, c5 = st.columns(5)
+c1, c2, c3, c4 = st.columns(4)
 with c1:
     check_existence = st.checkbox("🔍 Multi-API Verification", value=True)
 with c2:
@@ -261,24 +284,17 @@ with c3:
     use_gemini = st.checkbox("🤖 Gemini AI Analysis", value=True)
 with c4:
     advanced_analysis = st.checkbox("📊 Advanced Analytics", value=True)
-with c5:
-    force_analysis = st.checkbox("⚡ Force Analysis (non-news)", value=False)
 
 # ── Main Analysis Button ────────────────────────────────────────────────────────
 if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=True):
     if not (input_text and input_text.strip()):
         st.warning("⚠️ Please enter text to analyze")
-    elif not analysis_allowed and not force_analysis:
+    elif not analysis_allowed:
         st.error(
             "❌ **Analysis blocked**: Content doesn't appear to be news. "
-            "Enable **Force Analysis** to proceed anyway."
+            "Please provide an actual news headline or article text."
         )
     else:
-        if force_analysis and content_analysis and not content_analysis.get("is_news"):
-            st.warning(
-                "⚠️ **Analyzing non-news content**: Results may not be accurate or meaningful.\n\n"
-                f"**Detected Content Type**: {content_analysis.get('content_type','unknown').replace('_',' ').title()}"
-            )
 
         tab1, tab2, tab3, tab4, tab5 = st.tabs(
             ["🔍 Verification", "🧠 RAG Analysis", "🤖 ML Models", "🧠 AI Assessment", "📊 Summary"]
