@@ -21,3 +21,8 @@ requests==2.32.3
 
 # AI / LLM
 google-generativeai==0.5.4
+
+# RAG Enhancements
+chromadb==0.5.5
+sentence-transformers==2.2.2
+torch>=2.0.0; platform_system != 'Windows' or platform_machine != 'x86' or python_version>='3.10'

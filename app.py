@@ -42,6 +42,9 @@ from rag_system import (  # noqa: E402
     check_rag_health,
 )
 
+# New advanced RAG pipeline (higher-level ingestion + QA)
+from rag_pipeline import get_or_create_rag_pipeline  # noqa: E402
+
 from ml_analysis import load_all_models, analyze_with_all_models  # noqa: E402
 
 # IMPORTANT: Avoid name collisions — import Gemini analysis only from ai_analysis
@@ -104,6 +107,8 @@ def initialize_rag():
 with st.spinner("Initializing system..."):
     try:
         rag_system = initialize_rag()
+        # Initialize higher-level pipeline (wraps rag_system internally if needed)
+        rag_pipeline = get_or_create_rag_pipeline()
     except Exception as e:
         st.error(str(e))
         st.stop()
@@ -154,6 +159,23 @@ with st.sidebar:
     except Exception:
         pass
     st.markdown(f"**Facts in DB:** {fact_count}")
+
+    # Bulk ingestion controls
+    with st.expander("📥 Bulk Ingest Datasets (True/False News)"):
+        st.caption("Ingest a limited number of rows from large datasets to expand RAG knowledge base. Uses chunking.")
+        ingest_limit = st.slider("Rows per file (preview limit)", 50, 500, 150, step=50)
+        if st.button("🚀 Ingest Default Datasets"):
+            try:
+                with st.spinner("Ingesting datasets into RAG knowledge base..."):
+                    added = rag_pipeline.bulk_ingest_default_datasets(per_file_limit=ingest_limit)
+                if added > 0:
+                    st.success(f"✅ Ingested {added} fact chunks from datasets")
+                    st.toast("Knowledge base expanded!")
+                    st.rerun()
+                else:
+                    st.info("No new facts added (possible duplicates or empty rows)")
+            except Exception as e:
+                st.error(f"Ingestion failed: {e}")
 
     with st.expander("➕ Add New Fact"):
         new_fact_content = st.text_area("Fact content:")
@@ -346,6 +368,33 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
 
                     if not fact_analysis.get("confirmations") and not fact_analysis.get("contradictions"):
                         st.info("ℹ️ No strong matches found in knowledge base")
+
+                    # --- New: Direct RAG QA (question answering over ingested corpus) ---
+                    st.markdown("---")
+                    st.markdown("### ❓ Ask a Question (RAG QA)")
+                    qa_query = st.text_input("Enter a claim or question to verify against knowledge base:", key="rag_qa_query")
+                    col_qa1, col_qa2, col_qa3 = st.columns([2,1,1])
+                    with col_qa1:
+                        k_ctx = st.number_input("Top K Contexts", min_value=1, max_value=15, value=5)
+                    with col_qa2:
+                        use_gemini_aug = st.checkbox("Gemini Augmentation", value=False, help="Refine answer with Gemini if API key present")
+                    with col_qa3:
+                        run_qa = st.button("🔎 Run QA", key="run_rag_qa")
+
+                    if run_qa and qa_query.strip():
+                        try:
+                            with st.spinner("Running RAG QA pipeline..."):
+                                qa_answer = rag_pipeline.generate_answer(qa_query.strip(), k=int(k_ctx), use_gemini=use_gemini_aug)
+                            st.success("**Answer:**")
+                            st.write(qa_answer.answer)
+                            st.caption(f"Confidence: {qa_answer.confidence*100:.1f}% | Mode: {qa_answer.mode}")
+                            with st.expander("🔍 Contexts Used"):
+                                for c in qa_answer.contexts:
+                                    st.markdown(f"- ({c.score:.3f}) {c.content[:250]}{'...' if len(c.content)>250 else ''}")
+                            with st.expander("🧠 Reasoning Trace"):
+                                st.code(qa_answer.reasoning, language="text")
+                        except Exception as e:
+                            st.error(f"RAG QA failed: {e}")
                 except Exception as e:
                     st.error(f"RAG analysis failed: {e}")
             else:
