@@ -13,7 +13,7 @@ A multi-source, RAG-enhanced fake news detection system using ML models, retriev
 ## Setup
 1. **Clone the repository**
    ```sh
-   git clone <your-repo-url>
+   git clone https://github.com/muhammadnavas/Fake_News_Predictor.git
    cd Fake_News_Predictor
    ```
 2. **Install dependencies**
@@ -65,9 +65,14 @@ A multi-source, RAG-enhanced fake news detection system using ML models, retriev
 ## License
 MIT (or specify your license)
 
+## Repository
+- **GitHub**: https://github.com/muhammadnavas/Fake_News_Predictor.git
+- **Owner**: muhammadnavas (MrHidey)
+- **Branch**: main
+
 ## Credits
-- Built by MrHidey and contributors
+- Built by MrHidey (muhammadnavas) and contributors
 - Uses open-source libraries: Streamlit, scikit-learn, chromadb, sentence-transformers, Google Generative AI, etc.
 
 ---
-For questions or contributions, open an issue or pull request.
+For questions or contributions, open an issue or pull request at the GitHub repository.
