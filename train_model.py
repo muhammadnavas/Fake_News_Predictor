@@ -17,9 +17,9 @@ def clean_text(text):
     if pd.isna(text):
         return ""
     text = str(text).lower()
-    # Remove punctuation but keep spaces
+
     text = ''.join([c if c not in string.punctuation else ' ' for c in text])
-    # Remove extra spaces
+
     text = ' '.join(text.split())
     return text
 
@@ -35,25 +35,25 @@ def load_and_prepare_data():
     """Load and prepare the training data"""
     print("📊 Loading data...")
     
-    # Check if data files exist
+
     if not os.path.exists("Fake.csv") or not os.path.exists("True.csv"):
         print("❌ Error: Fake.csv and True.csv files not found!")
         print("Please download the dataset from:")
         print("https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset")
         return None, None, None, None
     
-    # Load data
+
     fake_df = pd.read_csv("Fake.csv")
     real_df = pd.read_csv("True.csv")
     
-    # Add labels
+
     fake_df["label"] = 0  # Fake news
     real_df["label"] = 1  # Real news
     
-    # Combine datasets
+
     df = pd.concat([fake_df, real_df], ignore_index=True)
     
-    # Select relevant columns and clean
+
     df = df[["title", "text", "label"]].dropna()
     df["combined"] = df["title"].astype(str) + " " + df["text"].astype(str)
     df["combined"] = df["combined"].apply(clean_text)
@@ -69,12 +69,12 @@ def create_vectorizer_and_split(X, y, models_dir):
     """Create TF-IDF vectorizer and split data"""
     print("\n🔄 Creating vectorizer and splitting data...")
     
-    # Split data
+
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
     
-    # Create and fit TF-IDF vectorizer
+
     vectorizer = TfidfVectorizer(
         stop_words="english",
         max_df=0.7,
@@ -86,7 +86,7 @@ def create_vectorizer_and_split(X, y, models_dir):
     X_train_vec = vectorizer.fit_transform(X_train)
     X_test_vec = vectorizer.transform(X_test)
     
-    # Save vectorizer in models folder
+
     vectorizer_path = os.path.join(models_dir, "vectorizer.pkl")
     joblib.dump(vectorizer, vectorizer_path)
     print(f"💾 Vectorizer saved as: {vectorizer_path}")
@@ -141,20 +141,20 @@ def train_and_evaluate_models(X_train_bal, y_train_bal, X_test_vec, y_test, mode
         print(f"\n🔧 Training {name.replace('_', ' ').title()}...")
         
         try:
-            # Train model
+
             model.fit(X_train_bal, y_train_bal)
             
-            # Make predictions
+
             y_pred = model.predict(X_test_vec)
             
-            # Calculate metrics
+
             accuracy = accuracy_score(y_test, y_pred)
             
-            # Save model in models folder
+
             model_filename = os.path.join(models_dir, f"model_{name}.pkl")
             joblib.dump(model, model_filename)
             
-            # Store results
+
             model_results[name] = {
                 "model": model,
                 "accuracy": accuracy,
@@ -165,7 +165,7 @@ def train_and_evaluate_models(X_train_bal, y_train_bal, X_test_vec, y_test, mode
             print(f"   📈 Accuracy: {accuracy:.4f}")
             print(f"   💾 Saved as: {model_filename}")
             
-            # Print detailed classification report
+
             print(f"\n📊 Classification Report for {name.replace('_', ' ').title()}:")
             print(classification_report(y_test, y_pred, 
                                       target_names=['Fake', 'Real']))
@@ -189,7 +189,7 @@ def save_training_summary(model_results, models_dir):
             for name, results in model_results.items():
                 f.write(f"• {name.replace('_', ' ').title()}: {results['accuracy']:.4f} accuracy\n")
             
-            # Find best model
+
             best_model = max(model_results.items(), key=lambda x: x[1]['accuracy'])
             f.write(f"\nBest performing model: {best_model[0].replace('_', ' ').title()}\n")
             f.write(f"Best accuracy: {best_model[1]['accuracy']:.4f}\n")
@@ -205,27 +205,27 @@ def main():
     print("🚀 Starting Fake News Detection Model Training")
     print("=" * 50)
     
-    # Create models folder
+
     models_dir = create_models_folder()
     
-    # Load and prepare data
+
     X, y, df, _ = load_and_prepare_data()
     if X is None:
         return
     
-    # Create vectorizer and split data
+
     X_train_vec, X_test_vec, y_train, y_test, vectorizer = create_vectorizer_and_split(X, y, models_dir)
     
-    # Apply SMOTE
+
     X_train_bal, y_train_bal = apply_smote(X_train_vec, y_train)
     
-    # Train and evaluate models
+
     model_results = train_and_evaluate_models(X_train_bal, y_train_bal, X_test_vec, y_test, models_dir)
     
-    # Save training summary
+
     save_training_summary(model_results, models_dir)
     
-    # Summary
+
     print("\n" + "=" * 50)
     print("📋 TRAINING SUMMARY")
     print("=" * 50)
@@ -235,7 +235,7 @@ def main():
         for name, results in model_results.items():
             print(f"   • {name.replace('_', ' ').title()}: {results['accuracy']:.4f} accuracy")
         
-        # Find best model
+
         best_model = max(model_results.items(), key=lambda x: x[1]['accuracy'])
         print(f"\n🏆 Best performing model: {best_model[0].replace('_', ' ').title()}")
         print(f"   📈 Best accuracy: {best_model[1]['accuracy']:.4f}")
@@ -244,7 +244,7 @@ def main():
         print("   Files created:")
         print("   • vectorizer.pkl")
         for name in model_results.keys():
-            print(f"   • model_{name}.pkl")
+    
         print("   • training_summary.txt")
         
     else:

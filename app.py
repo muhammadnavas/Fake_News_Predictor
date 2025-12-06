@@ -1,14 +1,7 @@
 import os
 from datetime import datetime
 
-import streamlit as st  # MUST be imported before any module that uses Streamlit
-
-# ----------------------------------------------------------------------------------
-# IMPORTANT: set_page_config MUST be the very first Streamlit command.
-# Some imported modules (e.g., rag_system) call st.toast() during import/initialization.
-# To avoid the "set_page_config can only be called once" error, we configure the page
-# immediately and guard against accidental re-calls.
-# ----------------------------------------------------------------------------------
+import streamlit as st
 if not st.session_state.get("_page_configured", False):
     try:
         st.set_page_config(
@@ -21,17 +14,16 @@ if not st.session_state.get("_page_configured", False):
         pass
     st.session_state["_page_configured"] = True
 
-# Defer heavier imports until after page config
+
 import numpy as np
 import pandas as pd
 from dotenv import load_dotenv
 
-# Plotly (px is currently unused, but keeping import in case you add charts later)
-import plotly.express as px  # noqa: F401
+import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-# ── NLTK: download only if missing ──────────────────────────────────────────────
+
 import nltk
 
 def ensure_nltk_resources():
@@ -46,15 +38,13 @@ def ensure_nltk_resources():
             try:
                 nltk.download(pkg, quiet=True)
             except Exception:
-                # Don't hard-fail the app if NLTK can't download (e.g., no internet)
                 pass
 
 ensure_nltk_resources()
 
-# ── Import custom modules (ensure these files exist in your project) ────────────
-from fetch_news import get_all_news, comprehensive_news_check  # noqa: E402
+from fetch_news import get_all_news, comprehensive_news_check
 
-from rag_system import (  # noqa: E402
+from rag_system import (
     RAGKnowledgeBase,
     analyze_against_facts,
     calculate_kb_confidence,
@@ -62,19 +52,15 @@ from rag_system import (  # noqa: E402
     check_rag_health,
 )
 
-# New advanced RAG pipeline (higher-level ingestion + QA)
-from rag_pipeline import get_or_create_rag_pipeline  # noqa: E402
-
-from ml_analysis import load_all_models, analyze_with_all_models  # noqa: E402
-
-# IMPORTANT: Avoid name collisions — import Gemini analysis only from ai_analysis
-from ai_analysis import (  # noqa: E402
+from rag_pipeline import get_or_create_rag_pipeline
+from ml_analysis import load_all_models, analyze_with_all_models
+from ai_analysis import (
     rag_enhanced_gemini_analysis,
     standard_gemini_analysis,
 )
 
-from content_detector import (  # noqa: E402
-    add_content_validation_to_streamlit,  # (optional helper, not required below)
+from content_detector import (
+    add_content_validation_to_streamlit,
     detect_content_type,
     get_detailed_content_analysis,
     reset_content_validation_state,
@@ -83,24 +69,17 @@ from content_detector import (  # noqa: E402
     validate_news_content,
 )
 
-# (Page config already set above; section retained for readability/documentation.)
 
-# ── Load environment variables and validate critical keys ───────────────────────
 load_dotenv()
 
-# Prefer Streamlit secrets if present; fallback to environment variables
+
 def _get_secret(name: str):
     try:
         return st.secrets.get(name)  # type: ignore[attr-defined]
     except Exception:
         return None
 
-# ── Safe columns wrapper to avoid JavaScript errors ─────────────────────────────
 def safe_columns(spec, gap="small"):
-    """
-    Wrapper for st.columns() to avoid JavaScript 'vertical' property errors.
-    Explicitly specifies gap parameter to prevent undefined property access.
-    """
     try:
         if isinstance(spec, int):
             # For integer spec, create equal-width columns with explicit gap
@@ -109,7 +88,7 @@ def safe_columns(spec, gap="small"):
             # For list spec (custom widths), use explicit gap
             return st.columns(spec, gap=gap)
     except TypeError:
-        # Fallback for older Streamlit versions without gap parameter
+
         return st.columns(spec)
 
 GEMINI_API_KEY = _get_secret("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
@@ -124,14 +103,12 @@ if missing_keys:
     st.info("Please set the required API keys in your .env file")
     st.stop()
 
-# ── Title / Header ──────────────────────────────────────────────────────────────
+
 st.title("🔍 RAG-Enhanced Fake News Predictor")
 st.markdown("**Multi-API News Verification** • **RAG Technology** • **ML-Powered Assessment** • **AI-Powered Assessment**")
 st.markdown("---")
 
-# ── Initialize RAG system quietly with robust error reporting ───────────────────
 def initialize_rag():
-    """Initialize RAG system with comprehensive error handling (no Streamlit calls here)."""
     import io
     from contextlib import redirect_stdout, redirect_stderr
 
@@ -141,19 +118,19 @@ def initialize_rag():
             rag = RAGKnowledgeBase()
         return rag
     except Exception as e:
-        # Bubble up a clean error; caller handles UI
+
         raise RuntimeError(f"RAG init failed: {e}")
 
 with st.spinner("Initializing system..."):
     try:
         rag_system = initialize_rag()
-        # Initialize higher-level pipeline (wraps rag_system internally if needed)
+
         rag_pipeline = get_or_create_rag_pipeline()
     except Exception as e:
         st.error(str(e))
         st.stop()
 
-# ── Sidebar: News Fetching + Knowledge Base Management ──────────────────────────
+
 with st.sidebar:
     st.header("📡 Latest News")
     topic = st.text_input("Enter topic for news:", value="technology")
@@ -170,7 +147,7 @@ with st.sidebar:
             except Exception as e:
                 st.error(f"Error: {e}")
 
-    # Display fetched articles
+
     if "articles" in st.session_state:
         st.markdown("### 📰 Recent Articles")
         for i, article in enumerate(st.session_state.articles):
@@ -190,17 +167,17 @@ with st.sidebar:
 
     st.markdown("---")
 
-    # Knowledge Base Management
+
     st.header("🧠 Knowledge Base")
     fact_count = 0
     try:
-        # Safely access fact_database if provided by your RAG implementation
+
         fact_count = len(getattr(rag_system, "fact_database", []))
     except Exception:
         pass
     st.markdown(f"**Facts in DB:** {fact_count}")
 
-    # Bulk ingestion controls
+
     with st.expander("📥 Bulk Ingest Datasets (True/False News)"):
         st.caption("Ingest a limited number of rows from large datasets to expand RAG knowledge base. Uses chunking.")
         ingest_limit = st.slider("Rows per file (preview limit)", 50, 500, 150, step=50)
@@ -237,45 +214,44 @@ with st.sidebar:
             else:
                 st.warning("Please enter fact content before adding.")
 
-# ── Load ML models ──────────────────────────────────────────────────────────────
+
 models, vectorizer = load_all_models()
 if models is None or vectorizer is None:
     st.error("❌ Could not load models or vectorizer. Please check 'models/' folder.")
 
 
-# ── Input area with content validation ──────────────────────────────────────────
+
 st.subheader("📝 Enter News Text")
 st.info(
     "💡 **Tip**: Enter actual news headlines or articles for accurate analysis. "
     "Personal statements or casual text may not be analyzed correctly."
 )
 
-# Ensure input is bound to session_state
+
 if "selected_text" not in st.session_state:
     st.session_state.selected_text = ""
 
-# Clear validation state button
+
 if st.button("🔄 Clear State", help="Clear validation cache for fresh analysis"):
     reset_content_validation_state()
-    st.session_state.selected_text = ""  # Clear input text
-    st.rerun()  # <-- Use this instead of experimental_rerun
+    st.session_state.selected_text = ""
+    st.rerun()
 
-# Input text area, bound to session_state
 input_text = st.text_area(
     "Paste news headline or article text:",
     value=st.session_state.selected_text,
-    key="selected_text",  # bind directly to session_state
+    key="selected_text",
     height=120,
     placeholder="Example: 'Breaking: Government announces new policy...' or 'Local authorities report incident...'",
 )
 
 
-# Real-time content validation
+
 content_analysis = None
 analysis_allowed = True
 
 if input_text and input_text.strip():
-    # Fresh validation each time input changes
+
     content_analysis = detect_content_type(input_text)
     validation_container = st.container()
     with validation_container:
@@ -291,7 +267,7 @@ if input_text and input_text.strip():
             st.error(f"**Detected as**: {detected_type}")
             analysis_allowed = False
 
-# ── Analysis options (added missing Force Analysis) ─────────────────────────────
+
 c1, c2, c3, c4 = safe_columns(4)
 with c1:
     check_existence = st.checkbox("🔍 Multi-API Verification", value=True)
@@ -302,7 +278,7 @@ with c3:
 with c4:
     advanced_analysis = st.checkbox("📊 Advanced Analytics", value=True)
 
-# ── Main Analysis Button ────────────────────────────────────────────────────────
+
 if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=True):
     if not (input_text and input_text.strip()):
         st.warning("⚠️ Please enter text to analyze")
@@ -317,7 +293,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
             ["🔍 Verification", "🧠 RAG Analysis", "🤖 ML Models", "🧠 AI Assessment", "📊 Summary"]
         )
 
-        # ── Tab 1: Multi-Source Verification ────────────────────────────────────
+
         with tab1:
             st.subheader("Multi-Source News Verification")
 
@@ -356,7 +332,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                 else:
                     st.info("No verification results to display.")
 
-        # ── Tab 2: RAG Analysis ─────────────────────────────────────────────────
+
         with tab2:
             st.subheader("🧠 RAG Knowledge Base Analysis")
             if use_rag:
@@ -402,7 +378,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                     if not fact_analysis.get("confirmations") and not fact_analysis.get("contradictions"):
                         st.info("ℹ️ No strong matches found in knowledge base")
 
-                    # --- New: Direct RAG QA (question answering over ingested corpus) ---
+
                     st.markdown("---")
                     st.markdown("### ❓ Ask a Question (RAG QA)")
                     qa_query = st.text_input("Enter a claim or question to verify against knowledge base:", key="rag_qa_query")
@@ -433,7 +409,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
             else:
                 st.info("Enable RAG Analysis to view knowledge base results.")
 
-        # ── Tab 3: ML Model Analysis ────────────────────────────────────────────
+
         with tab3:
             st.subheader("🤖 Machine Learning Model Analysis")
             if models:
@@ -456,7 +432,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                             specs=[[{"type": "bar"}], [{"type": "bar"}]],
                         )
 
-                        # Predictions bar chart (colored by label)
+
                         colors = ["red" if p == "FAKE" else "green" for p in predictions]
                         fig.add_trace(
                             go.Bar(
@@ -470,7 +446,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                             row=1, col=1,
                         )
 
-                        # Probabilities bars
+
                         fig.add_trace(
                             go.Bar(x=model_names, y=fake_probs, name="Fake Probability", marker_color="red"),
                             row=2, col=1,
@@ -483,7 +459,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                         fig.update_layout(height=700, showlegend=True, title_text="Comprehensive ML Model Analysis")
                         st.plotly_chart(fig, use_container_width=True)
 
-                    # Per-model textual results
+
                     for model_name, result in ml_results.items():
                         if "error" not in result:
                             if result["prediction"] == "REAL":
@@ -503,7 +479,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
             else:
                 st.error("No ML models loaded.")
 
-        # ── Tab 4: AI-Powered Assessment (Gemini) ───────────────────────────────
+
         with tab4:
             st.subheader("AI-Powered Assessment")
             gemini_analysis = None
@@ -531,7 +507,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
             else:
                 st.info("Enable Gemini AI Analysis to view AI assessment.")
 
-        # ── Tab 5: Summary ──────────────────────────────────────────────────────
+
         with tab5:
             st.subheader("📊 Summary Report")
             if content_analysis:
@@ -547,7 +523,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
 
             summary_rows = []
 
-            # Verification summary
+
             if check_existence and "verification_results" in locals() and verification_results:
                 if verification_results.get("sources_found"):
                     summary_rows.append([
@@ -559,7 +535,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                 else:
                     summary_rows.append(["News Verification", "NOT FOUND", "No matches across APIs"])
 
-            # RAG summary
+
             if use_rag and "kb_confidence" in locals():
                 consistency_val = (fact_analysis.get("overall_consistency") or "neutral").lower()
                 if consistency_val == "consistent":
@@ -572,7 +548,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                     summary_rows.append(["RAG Knowledge Base", "NEUTRAL",
                                          f"KB Confidence: {kb_confidence:.1f}%, no strong matches"])
 
-            # ML summary
+
             if models and "ml_results" in locals():
                 valid_results = [r for r in ml_results.values() if "error" not in r]
                 real_votes = sum(1 for r in valid_results if r["prediction"] == "REAL")
@@ -589,7 +565,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                     summary_rows.append(["ML Models Consensus", "SPLIT",
                                          f"Equal votes, Avg confidence: {avg_conf:.2%}"])
 
-            # Gemini summary
+
             if use_gemini and "gemini_analysis" in locals() and gemini_analysis is not None:
                 up = gemini_analysis.upper()
                 if "REAL" in up:
@@ -638,7 +614,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                         "Seek additional verification from trusted sources."
                     )
 
-                # RAG-specific insights
+
                 if use_rag and "relevant_facts" in locals() and relevant_facts:
                     st.markdown("### 🧠 Knowledge Base Insights")
                     if fact_analysis.get("confirmations"):
@@ -654,10 +630,10 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
             else:
                 st.info("No analysis results to display. Please run the analysis first.")
 
-# ── System Information / Health ─────────────────────────────────────────────────
+
 st.markdown("---")
 with st.expander("🔧 System Information"):
-    # RAG Health Check
+
     try:
         rag_health = check_rag_health(rag_system)
     except Exception as e:
@@ -667,7 +643,7 @@ with st.expander("🔧 System Information"):
     for component, status in (rag_health or {}).items():
         st.markdown(f"- {component}: {status}")
 
-    # Content validation statistics
+
     st.markdown("**Content Validation Info:**")
     if input_text and input_text.strip():
         try:
@@ -707,18 +683,18 @@ with st.expander("🔧 System Information"):
         with col4:
             st.metric("News Score", "0/100")
 
-    # Reset buttons
+
     rb1, rb2 = safe_columns(2)
     with rb1:
         if st.button("🔄 Reset RAG System"):
             try:
-                # Clear ChromaDB if available
+
                 if hasattr(rag_system, "chroma_client") and getattr(rag_system, "chroma_client"):
                     try:
                         rag_system.chroma_client.delete_collection("news_facts")
                     except Exception:
                         pass
-                # Clear Streamlit resource cache and re-run
+
                 try:
                     st.cache_resource.clear()
                 except Exception:
@@ -748,7 +724,7 @@ with st.expander("🔧 System Information"):
 """
     )
 
-# ── Footer ──────────────────────────────────────────────────────────────────────
+
 st.markdown("---")
 st.markdown(
     """

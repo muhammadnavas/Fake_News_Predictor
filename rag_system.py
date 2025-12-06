@@ -12,7 +12,7 @@ if not hasattr(np, "int_"):
 if not hasattr(np, "float_"):
     np.float_ = float
 
-# RAG imports - with proper error handling
+
 try:
     import chromadb
     from chromadb.config import Settings
@@ -36,13 +36,13 @@ except ImportError:
     SKLEARN_AVAILABLE = False
     print("Scikit-learn not available")
 
-# Streamlit import with fallback
+
 try:
     import streamlit as st
     STREAMLIT_AVAILABLE = True
 except ImportError:
     STREAMLIT_AVAILABLE = False
-    # Create a fallback for st functions
+
     class DummyStreamlit:
         def success(self, msg): print(f"SUCCESS: {msg}")
         def warning(self, msg): print(f"WARNING: {msg}")
@@ -50,7 +50,7 @@ except ImportError:
         def error(self, msg): print(f"ERROR: {msg}")
     st = DummyStreamlit()
 
-# Load Google Fact Check API Key
+
 GOOGLEFACT_KEY = os.getenv("GOOGLE_FACTCHECK")
 
 
@@ -58,7 +58,7 @@ def fetch_google_fact_checks(query: str = None, max_results: int = 10) -> List[D
     """
     Fetch fact check claims from Google Fact Check API
     """
-    # Check if API key is missing or is a placeholder
+
     if not GOOGLEFACT_KEY or "YOUR_" in GOOGLEFACT_KEY.upper() or "PLACEHOLDER" in GOOGLEFACT_KEY.upper():
         return []
         
@@ -94,12 +94,12 @@ def fetch_google_fact_checks(query: str = None, max_results: int = 10) -> List[D
         return result_claims
         
     except requests.exceptions.HTTPError as e:
-        # Only show warning for non-authentication errors
+
         if e.response.status_code not in [400, 401, 403]:
             st.warning(f"Could not fetch Google Fact Check claims: {e}")
         return []
     except Exception as e:
-        # Silently fail for other errors (network issues, etc.)
+
         return []
 
 
@@ -116,10 +116,10 @@ class RAGKnowledgeBase:
 
     def initialize_rag_system(self):
         """Initialize ChromaDB + embeddings, fallback to TF-IDF"""
-        # Load fact database first
+
         self.load_fact_database()
         
-        # Try to initialize ChromaDB and embeddings
+
         if CHROMADB_AVAILABLE and SENTENCE_TRANSFORMERS_AVAILABLE:
             try:
                 self.chroma_persist_dir = os.path.join(os.getcwd(), "chroma_db")
@@ -133,7 +133,7 @@ class RAGKnowledgeBase:
                 self.embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
                 st.toast("✅ ChromaDB and SentenceTransformer initialized")
                 
-                # Initialize collection
+
                 self._initialize_collection()
                 return
                 
@@ -142,7 +142,7 @@ class RAGKnowledgeBase:
                 self.embedding_model = None
                 self.chroma_client = None
         
-        # Fall back to TF-IDF if ChromaDB/embeddings fail
+
         self.use_fallback_rag()
 
     def _initialize_collection(self):
@@ -167,7 +167,7 @@ class RAGKnowledgeBase:
                 self.use_fallback_rag()
                 return
 
-        # Fetch Google Fact Checks if API key is available and valid
+
         if GOOGLEFACT_KEY and "YOUR_" not in GOOGLEFACT_KEY.upper() and "PLACEHOLDER" not in GOOGLEFACT_KEY.upper():
             self.fetch_google_fact_checks_and_add()
 
@@ -195,8 +195,7 @@ class RAGKnowledgeBase:
             with open('fact_database.json', 'r', encoding='utf-8') as f:
                 self.fact_database = json.load(f)
             st.toast(f"📚 Loaded {len(self.fact_database)} facts from database")
-        except FileNotFoundError:
-            # Create sample fact database
+
             self.fact_database = [
                 {
                     "id": "fact_001",
@@ -259,7 +258,7 @@ class RAGKnowledgeBase:
                 for f in self.fact_database
             ]
             
-            # Clear existing data
+
             try:
                 existing_ids = self.collection.get()['ids']
                 if existing_ids:
@@ -286,7 +285,7 @@ class RAGKnowledgeBase:
             
         fact_id = f"fact_{hashlib.md5(content.encode()).hexdigest()[:8]}"
         
-        # Check if fact already exists
+
         if any(f['id'] == fact_id for f in self.fact_database):
             return
             
@@ -301,7 +300,7 @@ class RAGKnowledgeBase:
         self.fact_database.append(fact)
         self.save_fact_database()
         
-        # Add to ChromaDB if available
+
         if self.collection and self.embedding_model:
             try:
                 emb = self.embedding_model.encode([content]).tolist()
@@ -318,7 +317,7 @@ class RAGKnowledgeBase:
             except Exception as e:
                 st.warning(f"Could not add to ChromaDB: {e}")
         
-        # Update TF-IDF vectors if using fallback
+
         elif self.vectorizer and SKLEARN_AVAILABLE:
             try:
                 fact_texts = [fact['content'] for fact in self.fact_database]
@@ -331,14 +330,14 @@ class RAGKnowledgeBase:
         if not query or not query.strip():
             return []
             
-        # Try ChromaDB first
+
         if self.collection and self.embedding_model:
             return self._retrieve_with_chromadb(query, top_k)
         # Fall back to TF-IDF
         elif self.vectorizer and self.fact_vectors is not None:
             return self._retrieve_with_fallback(query, top_k)
         else:
-            # Simple keyword matching as last resort
+
             return self._retrieve_with_keywords(query, top_k)
 
     def _retrieve_with_chromadb(self, query: str, top_k: int) -> List[Dict]:
@@ -355,7 +354,7 @@ class RAGKnowledgeBase:
                 fact = next((f for f in self.fact_database if f['content'] == doc), None)
                 if fact:
                     fact_copy = fact.copy()
-                    # Convert distance to similarity score (assuming cosine distance)
+
                     similarity = 1.0 - (distances[i] if i < len(distances) else 0.5)
                     fact_copy["similarity"] = max(0, min(1, similarity))
                     results.append(fact_copy)
@@ -378,7 +377,7 @@ class RAGKnowledgeBase:
             
             results = []
             for idx in top_idx:
-                if sims[idx] > 0.1:  # Similarity threshold
+
                     fact = self.fact_database[idx].copy()
                     fact["similarity"] = float(sims[idx])
                     results.append(fact)
@@ -403,7 +402,7 @@ class RAGKnowledgeBase:
                 fact_copy["similarity"] = similarity
                 scored_facts.append(fact_copy)
         
-        # Sort by similarity and return top_k
+
         scored_facts.sort(key=lambda x: x["similarity"], reverse=True)
         return scored_facts[:top_k]
 
@@ -420,15 +419,15 @@ class RAGKnowledgeBase:
         for claim in claims:
             try:
                 if self.collection and self.embedding_model:
-                    # Check if claim already exists
+
                     try:
                         existing = self.collection.get(ids=[claim["id"]])
                         if existing and existing.get('ids'):
-                            continue  # Skip duplicate
+
                     except:
-                        pass  # Claim doesn't exist, proceed to add
+
                     
-                    # Add claim with metadata
+
                     self.collection.add(
                         ids=[claim["id"]],
                         documents=[claim["text"]],
@@ -472,7 +471,7 @@ class RAGKnowledgeBase:
         return stats
 
 
-# Helper functions
+
 def analyze_against_facts(news_text: str, relevant_facts: List[Dict]) -> Dict:
     """Analyze news text against retrieved facts"""
     analysis = {
@@ -489,7 +488,7 @@ def analyze_against_facts(news_text: str, relevant_facts: List[Dict]) -> Dict:
         similarity = fact.get("similarity", 0)
         analysis["similarity_scores"].append(similarity)
         
-        if similarity > 0.7:  # High similarity threshold
+
             if fact.get("verified", True):
                 analysis["confirmations"].append({
                     "fact": fact["content"],
@@ -503,7 +502,7 @@ def analyze_against_facts(news_text: str, relevant_facts: List[Dict]) -> Dict:
                     "sources": fact.get("sources", [])
                 })
     
-    # Determine overall consistency
+
     if len(analysis["contradictions"]) > len(analysis["confirmations"]):
         analysis["overall_consistency"] = "contradictory"
     elif len(analysis["confirmations"]) > 0:
@@ -523,7 +522,7 @@ def calculate_kb_confidence(relevant_facts: List[Dict], fact_analysis: Dict) -> 
     contradictions = len(fact_analysis["contradictions"])
     avg_similarity = np.mean(fact_analysis["similarity_scores"]) if fact_analysis["similarity_scores"] else 0
     
-    # Calculate confidence based on various factors
+
     consistency_score = (confirmations - contradictions) / max(len(relevant_facts), 1)
     similarity_score = avg_similarity
     
@@ -535,7 +534,7 @@ def comprehensive_news_check_with_rag(news_text: str, rag: RAGKnowledgeBase) -> 
     """
     Extended comprehensive news check with Google Fact Check + RAG integration.
     """
-    # Basic structure for results
+
     results = {
         "sources_found": [],
         "total_matches": 0,
@@ -545,12 +544,12 @@ def comprehensive_news_check_with_rag(news_text: str, rag: RAGKnowledgeBase) -> 
         "rag_analysis": None
     }
     
-    # Try to import and use fetch_news functions
+
     try:
         from fetch_news import comprehensive_news_check
         results = comprehensive_news_check(news_text)
         
-        # Fetch Google Fact Check claims
+
         google_claims = []
         if news_text.strip():
             try:
@@ -570,7 +569,7 @@ def comprehensive_news_check_with_rag(news_text: str, rag: RAGKnowledgeBase) -> 
                 "count": len(google_claims)
             }
 
-            # Add claims into the RAG knowledge base
+
             for claim in google_claims:
                 rag.add_fact(
                     content=claim.get("text", ""),
@@ -587,7 +586,7 @@ def comprehensive_news_check_with_rag(news_text: str, rag: RAGKnowledgeBase) -> 
     except Exception as e:
         st.error(f"Error in comprehensive news check: {e}")
     
-    # RAG Analysis
+
     try:
         relevant_facts = rag.retrieve_relevant_facts(news_text, top_k=5)
         fact_analysis = analyze_against_facts(news_text, relevant_facts)
@@ -598,7 +597,7 @@ def comprehensive_news_check_with_rag(news_text: str, rag: RAGKnowledgeBase) -> 
             "knowledge_base_confidence": calculate_kb_confidence(relevant_facts, fact_analysis)
         }
         
-        # Update confidence score considering RAG analysis
+
         rag_confidence = results["rag_analysis"]["knowledge_base_confidence"]
         base_confidence = results.get("confidence_score", 0)
         results["confidence_score"] = (base_confidence * 0.7 + rag_confidence * 0.3)
@@ -639,7 +638,7 @@ def check_rag_health(rag: RAGKnowledgeBase) -> Dict:
         elif stats.get("fallback_active"):
             health_status["Embeddings"] = "⚠️ TF-IDF fallback"
         
-        # Determine overall status
+
         if "✅" in health_status["ChromaDB"] and "✅" in health_status["Embeddings"]:
             health_status["Overall"] = "✅ Fully Operational"
         elif "⚠️" in str(health_status.values()) or stats['total_facts'] > 0:
@@ -658,7 +657,7 @@ def check_rag_health(rag: RAGKnowledgeBase) -> Dict:
         }
 
 
-# AI Analysis Functions
+
 def rag_enhanced_gemini_analysis(text: str, relevant_facts: List[Dict]) -> str:
     """RAG-enhanced Gemini analysis"""
     try:
@@ -670,7 +669,7 @@ def rag_enhanced_gemini_analysis(text: str, relevant_facts: List[Dict]) -> str:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel('gemini-2.5-flash-latest')
         
-        # Create context from relevant facts
+
         context = "\n".join([f"- {fact['content']} (Sources: {', '.join(fact.get('sources', []))})" 
                            for fact in relevant_facts])
         
@@ -727,7 +726,7 @@ def standard_gemini_analysis(text: str) -> str:
         return f"Gemini analysis failed: {e}"
 
 
-# Example usage and testing
+
 def main():
     """Main function for testing the RAG system"""
     print("🚀 Initializing RAG Knowledge Base...")

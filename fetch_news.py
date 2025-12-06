@@ -5,14 +5,14 @@ import time
 from typing import List, Dict, Tuple, Optional
 from api_utils import is_valid_api_key, should_suppress_error
 
-# Load API keys from .env
+
 load_dotenv()
 NEWSAPI_KEY = os.getenv("NEWSAPI_KEY")
 GNEWS_KEY = os.getenv("GNEWS_KEY")
 CURRENTS_KEY = os.getenv("CURRENTS_KEY")
 CONTEXTUALWEB_KEY = os.getenv("ContextualWeb_KEY")
 
-# Fetch News Functions
+
 def fetch_newsapi(keyword: Optional[str] = None, country: str = "us", page_size: int = 20) -> List[Dict]:
     """Fetch news from NewsAPI"""
     if not NEWSAPI_KEY:
@@ -27,7 +27,7 @@ def fetch_newsapi(keyword: Optional[str] = None, country: str = "us", page_size:
     }
     
     if keyword:
-        # Use 'everything' endpoint for keyword search
+
         url = "https://newsapi.org/v2/everything"
         params = {
             "apiKey": NEWSAPI_KEY,
@@ -154,17 +154,17 @@ def fetch_currents(keyword: Optional[str] = None, page_size: int = 20) -> List[D
         print("Warning: CURRENTS_KEY not found")
         return []
     
-    url = "https://api.currentsapi.services/v1/search" if keyword else "https://api.currentsapi.services/v1/latest-news"
+
     params = {
         "apiKey": CURRENTS_KEY,
         "language": "en",
-        "page_size": min(page_size, 10)  # smaller page size for speed
+
     }
     if keyword:
         params["keywords"] = keyword
     
     try:
-        response = requests.get(url, params=params, timeout=20)  # longer timeout
+
         response.raise_for_status()
         
         return [
@@ -196,11 +196,11 @@ def check_news_existence(news_text: str, country: str = "us") -> Tuple[bool, Opt
         print("Warning: NEWSAPI_KEY not found for news existence check")
         return False, None, None
     
-    # First, try searching for the exact text
+
     url = "https://newsapi.org/v2/everything"
     params = {
         "apiKey": NEWSAPI_KEY,
-        "q": news_text[:500],  # Limit query length
+
         "language": "en",
         "sortBy": "relevancy",
         "pageSize": 5
@@ -213,13 +213,13 @@ def check_news_existence(news_text: str, country: str = "us") -> Tuple[bool, Opt
         articles = response.json().get("articles", [])
         
         if articles:
-            # Return the most relevant article
+
             best_match = articles[0]
             return True, best_match["title"], best_match["url"]
         
-        # If no exact match, try with key terms
+
         words = news_text.lower().split()
-        key_words = [word for word in words if len(word) > 4][:5]  # Take first 5 meaningful words
+
         
         if key_words:
             params["q"] = " ".join(key_words)
@@ -334,8 +334,7 @@ def check_contextualweb_existence(news_text: str, max_results: int = 10) -> Tupl
         return False, []
     
     url = "https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/search/NewsSearchAPI"
-    params = {
-        "q": news_text[:100],  # restrict query length
+
         "pageNumber": 1,
         "pageSize": max_results,
         "autoCorrect": "true",
@@ -370,41 +369,7 @@ def check_contextualweb_existence(news_text: str, max_results: int = 10) -> Tupl
     except Exception:
         return False, []
 
-def fetch_google_fact_checks(query: str):
-    """
-    Fetch claims from Google Fact Check API for the given query text.
-    """
-    api_key = os.getenv("GOOGLE_FACTCHECK_API_KEY")
-    if not api_key:
-        raise ValueError("❌ GOOGLE_FACTCHECK_API_KEY not found in environment")
 
-    if not query.strip():
-        return []  # avoid calling API with empty query
-
-    url = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
-    params = {
-        "query": query,
-        "languageCode": "en",
-        "key": api_key
-    }
-
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    data = response.json()
-
-    claims = []
-    for claim in data.get("claims", []):
-        claims.append({
-            "text": claim.get("text"),
-            "claimant": claim.get("claimant"),
-            "claimDate": claim.get("claimDate"),
-            "claimReview": claim.get("claimReview", [])
-        })
-
-    return claims
-
-import os
-import requests
 
 def fetch_google_fact_checks(query="news", language="en", max_results=10):
     """
@@ -490,11 +455,11 @@ def remove_duplicates(articles: List[Dict]) -> List[Dict]:
         url = article.get("url", "")
         title = article.get("title", "").lower().strip()
         
-        # Skip if URL or very similar title already seen
+    
         if url in seen_urls or title in seen_titles:
             continue
         
-        # Skip if title is too generic or empty
+
         if not title or len(title) < 10 or title in ["[removed]", "removed"]:
             continue
         
@@ -513,7 +478,7 @@ def get_all_news(keyword: Optional[str] = None, max_articles: int = 50) -> List[
     print(f"Fetching news for keyword: {keyword}")
     all_articles = []
     
-    # Add small delays between API calls to be respectful
+
     sources = [
         ("NewsAPI", lambda: fetch_newsapi(keyword)),
         ("GNews", lambda: fetch_gnews(keyword, max_articles//3)),
@@ -527,12 +492,12 @@ def get_all_news(keyword: Optional[str] = None, max_articles: int = 50) -> List[
             articles = fetch_func()
             all_articles.extend(articles)
             print(f"Got {len(articles)} articles from {source_name}")
-            time.sleep(0.5)  # Small delay between sources
+
         except Exception as e:
             print(f"Error fetching from {source_name}: {e}")
             continue
     
-    # Remove duplicates and return
+
     unique_articles = remove_duplicates(all_articles)
     print(f"Total unique articles: {len(unique_articles)}")
     
@@ -550,7 +515,7 @@ def search_specific_claim(claim: str, max_results: int = 10) -> List[Dict]:
     url = "https://newsapi.org/v2/everything"
     params = {
         "apiKey": NEWSAPI_KEY,
-        "q": f'"{claim}"',  # Search for exact phrase
+
         "language": "en",
         "sortBy": "relevancy",
         "pageSize": max_results
@@ -568,7 +533,7 @@ def search_specific_claim(claim: str, max_results: int = 10) -> List[Dict]:
                 "url": article["url"],
                 "source": article["source"]["name"],
                 "publishedAt": article.get("publishedAt", ""),
-                "relevanceScore": "High"  # Since we're searching for exact matches
+
             })
         
         return articles
@@ -592,7 +557,7 @@ def comprehensive_news_check(news_text: str) -> Dict:
         ("NewsAPI", lambda: check_newsapi_existence(news_text)),
         ("GNews", lambda: check_gnews_existence(news_text)),
         ("CurrentsAPI", lambda: check_currents_existence(news_text)),
-        ("ContextualWeb", lambda: check_contextualweb_existence(news_text))  # ✅ added safely
+
     ]
     
     for api_name, check_func in apis_to_check:
@@ -613,7 +578,7 @@ def comprehensive_news_check(news_text: str) -> Dict:
                 "error": str(e)
             }
 
-    # ✅ Fetch Google Fact Check claims BEFORE returning
+
     google_claims = fetch_google_fact_checks(news_text)
     if google_claims:
         results["sources_found"].append("GoogleFactCheck")
@@ -626,7 +591,7 @@ def comprehensive_news_check(news_text: str) -> Dict:
     else:
         results["search_summary"]["GoogleFactCheck"] = {"found": False, "count": 0}
 
-    # Calculate confidence score
+
     source_count = len(results["sources_found"])
     match_count = min(results["total_matches"], 10)
     results["confidence_score"] = min(

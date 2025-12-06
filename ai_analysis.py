@@ -2,42 +2,42 @@ import os
 from typing import List, Dict
 import google.generativeai as genai
 
-# Try dotenv first (local dev), then Streamlit secrets (cloud)
+
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-    pass  # if dotenv not available, ignore
 
-# --- API Key Handling ---
+
+
 def get_gemini_key() -> str:
     """Fetch Gemini API key safely from env or Streamlit secrets."""
-    # Try multiple environment variable names for flexibility (GEMINI_API first since that's what you have)
+
     key = os.getenv("GEMINI_API") or os.getenv("GEMINI_API_KEY")
     
     if not key:
         try:
             import streamlit as st
-            # Try both possible secret names
+
             key = st.secrets.get("GEMINI_API", None) or st.secrets.get("GEMINI_API_KEY", None)
         except Exception:
             key = None
 
     if not key:
-        # Don't print here as it may cause issues in Streamlit
+
         return None
 
     return key.strip()
 
 def get_newsapi_key() -> str:
     """Fetch NewsAPI key safely from env or Streamlit secrets."""
-    # Try multiple environment variable names for flexibility
+
     key = os.getenv("NEWSAPI_KEY") or os.getenv("NEWS_API_KEY") or os.getenv("NEWSAPI")
     
     if not key:
         try:
             import streamlit as st
-            # Try multiple possible secret names
+
             key = st.secrets.get("NEWSAPI_KEY", None) or st.secrets.get("NEWS_API_KEY", None) or st.secrets.get("NEWSAPI", None)
         except Exception:
             key = None
@@ -47,7 +47,7 @@ def get_newsapi_key() -> str:
 
     return key.strip()
 
-# --- Initialize Gemini ---
+
 GEMINI_KEY = get_gemini_key()
 NEWSAPI_KEY = get_newsapi_key()
 
@@ -60,7 +60,7 @@ if GEMINI_KEY:
 else:
     model = None
 
-# --- Helper function to check API availability ---
+
 def check_api_keys():
     """Check which API keys are available and return status."""
     status = {
@@ -71,7 +71,7 @@ def check_api_keys():
     }
     return status
 
-# --- RAG-enhanced Gemini analysis ---
+
 def rag_enhanced_gemini_analysis(news_text: str, relevant_facts: List[Dict]) -> str:
     """Enhance Gemini analysis with RAG-retrieved facts."""
     if not model:
@@ -131,7 +131,7 @@ Format your response clearly with headers and bullet points.
     except Exception as e:
         return f"❌ Error in RAG-enhanced analysis: {str(e)}"
 
-# --- Standard Gemini analysis ---
+
 def standard_gemini_analysis(news_text: str) -> str:
     """Standard Gemini analysis without RAG enhancement."""
     if not model:
@@ -171,12 +171,12 @@ Format your response clearly with headers and bullet points.
     except Exception as e:
         return f"❌ Error in Gemini analysis: {str(e)}"
 
-# --- Validation function to check all API keys ---
+
 def validate_api_keys():
     """Validate and print all API key statuses for debugging."""
     print("🔍 API Key Validation:")
     
-    # Check all possible environment variables
+
     gemini_api = os.getenv("GEMINI_API")
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     newsapi_key = os.getenv("NEWSAPI_KEY")
@@ -185,7 +185,7 @@ def validate_api_keys():
     print(f"GEMINI_API_KEY: {'✅ Found' if gemini_api_key else '❌ Missing'}")
     print(f"NEWSAPI_KEY: {'✅ Found' if newsapi_key else '❌ Missing'}")
     
-    # Check Streamlit secrets if available
+
     try:
         import streamlit as st
         gemini_secret = st.secrets.get("GEMINI_API", None) or st.secrets.get("GEMINI_API_KEY", None)
@@ -199,7 +199,7 @@ def validate_api_keys():
     print(f"Final NEWSAPI_KEY: {'✅ Available' if NEWSAPI_KEY else '❌ Missing'}")
     print(f"Gemini Model: {'✅ Initialized' if model else '❌ Failed'}")
 
-# --- Function to display API status in Streamlit ---
+
 def display_api_status():
     """Display API key status in Streamlit sidebar or main area."""
     try:
@@ -207,7 +207,7 @@ def display_api_status():
         
         st.subheader("🔧 API Configuration Status")
         
-        # Debug information
+
         st.code(f"""
 Debug Info:
 GEMINI_API (env): {os.getenv('GEMINI_API', 'Not found')}
@@ -234,7 +234,7 @@ Model initialized: {'Yes' if model else 'No'}
             st.error("❌ NewsAPI: Not configured")
             st.info("💡 Make sure NEWSAPI_KEY is set in your .env file or Streamlit secrets")
         
-        # Instructions for setting up secrets
+
         with st.expander("📋 How to set up API keys"):
             st.markdown("""
             **For Streamlit Cloud:**
@@ -251,8 +251,8 @@ Model initialized: {'Yes' if model else 'No'}
             """)
             
     except ImportError:
-        # If streamlit is not available, just pass
+
         pass
 
-# Run validation on import
+
 validate_api_keys()

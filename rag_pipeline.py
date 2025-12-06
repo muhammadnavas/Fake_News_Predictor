@@ -31,10 +31,10 @@ import hashlib
 from dataclasses import dataclass, field
 from typing import List, Dict, Optional, Iterable, Tuple
 
-# Reuse existing logic / fallbacks from rag_system
+
 from rag_system import RAGKnowledgeBase
 
-try:  # Light dependency guards
+
     from sentence_transformers import SentenceTransformer  # type: ignore
     _HAS_ST = True
 except Exception:
@@ -55,12 +55,12 @@ except Exception:
 
 try:
     import numpy as np  # type: ignore
-except Exception:  # pragma: no cover
+
     np = None  # type: ignore
 
 try:
     import streamlit as st  # type: ignore
-except Exception:  # Fallback to no-op interface
+
     class _Dummy:
         def write(self, *a, **k): print(*a)
         def warning(self, *a, **k): print("WARNING:", *a)
@@ -70,9 +70,7 @@ except Exception:  # Fallback to no-op interface
         def toast(self, *a, **k): print("TOAST:", *a)
     st = _Dummy()  # type: ignore
 
-# --------------------------------------------------------------------------------------
-# Data structures
-# --------------------------------------------------------------------------------------
+
 @dataclass
 class RetrievedContext:
     id: str
@@ -90,9 +88,7 @@ class RAGAnswer:
     confidence: float
     mode: str  # "embedding" | "tfidf" | "keyword"
 
-# --------------------------------------------------------------------------------------
-# Utility helpers
-# --------------------------------------------------------------------------------------
+
 
 def _hash_text(txt: str) -> str:
     return hashlib.md5(txt.encode("utf-8")).hexdigest()[:12]
@@ -103,8 +99,7 @@ def _normalize_fieldnames(fields: List[str]) -> Dict[str, str]:
     return lower_map
 
 
-def _iter_csv_rows(path: str, limit: Optional[int] = None) -> Iterable[Dict[str, str]]:
-    """Stream rows from a potentially large CSV (utf-8)."""
+
     with open(path, "r", encoding="utf-8", errors="ignore") as f:
         reader = csv.DictReader(f)
         if not reader.fieldnames:
@@ -112,7 +107,7 @@ def _iter_csv_rows(path: str, limit: Optional[int] = None) -> Iterable[Dict[str,
         field_map = _normalize_fieldnames(reader.fieldnames)
         count = 0
         for row in reader:
-            # Build uniform structure
+
             yield {
                 "title": row.get(field_map.get("title", "title"), "").strip(),
                 "text": row.get(field_map.get("text", "text"), "").strip(),
@@ -124,8 +119,7 @@ def _iter_csv_rows(path: str, limit: Optional[int] = None) -> Iterable[Dict[str,
                 break
 
 
-def _chunk_text(text: str, max_chars: int = 800) -> List[str]:
-    """Naive chunking by sentence-ish periods; ensures manageable embedding size."""
+
     if not text:
         return []
     parts: List[str] = []
@@ -147,9 +141,7 @@ def _chunk_text(text: str, max_chars: int = 800) -> List[str]:
         parts.append(" ".join(current).strip())
     return parts
 
-# --------------------------------------------------------------------------------------
-# RAG Pipeline
-# --------------------------------------------------------------------------------------
+
 class RAGPipeline:
     """High-level ingestion + retrieval + answer synthesis pipeline.
 
@@ -161,9 +153,7 @@ class RAGPipeline:
             "tfidf" if self.kb.vectorizer else "keyword"
         )
 
-    # ------------------------------------------------------------------
-    # Ingestion
-    # ------------------------------------------------------------------
+
     def ingest_csv_dataset(self, path: str, label: str, limit: Optional[int] = 200):
         """Ingest a CSV dataset, converting each article into 1..N facts.
 
@@ -182,13 +172,13 @@ class RAGPipeline:
                 if not (title or body):
                     continue
                 base = f"{title}. {body}".strip()
-                # Chunk long articles
+
                 chunks = _chunk_text(base, max_chars=800)
                 if not chunks:
                     continue
                 for chunk in chunks:
                     fact_id = _hash_text(chunk)
-                    # Avoid duplicates quickly
+
                     if any(f.get("id") == f"fact_{fact_id}" for f in self.kb.fact_database):
                         continue
                     category = row.get("subject", label) or label
@@ -196,7 +186,7 @@ class RAGPipeline:
                     sources = [category.title()]
                     self.kb.add_fact(chunk, category=category, verified=verified, sources=sources)
                     added += 1
-        except Exception as e:  # pragma: no cover - runtime environment dependent
+
             st.error(f"Ingestion error for {path}: {e}")
         if added:
             st.toast(f"✅ Ingested {added} fact chunks from {os.path.basename(path)}")
@@ -210,9 +200,7 @@ class RAGPipeline:
         total_added += self.ingest_csv_dataset(fake_path, label="fake", limit=per_file_limit)
         return total_added
 
-    # ------------------------------------------------------------------
-    # Retrieval + Answer
-    # ------------------------------------------------------------------
+
     def retrieve(self, query: str, k: int = 5) -> List[RetrievedContext]:
         raw = self.kb.retrieve_relevant_facts(query, top_k=k)
         contexts: List[RetrievedContext] = []
@@ -242,7 +230,7 @@ class RAGPipeline:
                 confidence=0.0,
                 mode=self.embedding_mode,
             )
-        # Simple heuristic synthesis
+
         supporting = [c for c in contexts if str(c.metadata.get("verified", "False")).lower() in ["true", "1"]]
         contradicting = [c for c in contexts if str(c.metadata.get("verified", "False")).lower() in ["false", "0"]]
         avg_score = sum(c.score for c in contexts) / max(1, len(contexts))
@@ -289,7 +277,7 @@ Guidelines:
                         reasoning += "\nLLM augmentation applied."
                 else:
                     reasoning += "\nGemini key missing; skipped LLM augmentation."
-            except Exception as e:  # pragma: no cover
+
                 reasoning += f"\nGemini augmentation failed: {e}"
 
         return RAGAnswer(
@@ -302,7 +290,7 @@ Guidelines:
         )
 
 
-# Convenience function for external use
+
 _pipeline_singleton: Optional[RAGPipeline] = None
 
 def get_or_create_rag_pipeline() -> RAGPipeline:
@@ -312,7 +300,7 @@ def get_or_create_rag_pipeline() -> RAGPipeline:
     return _pipeline_singleton
 
 
-if __name__ == "__main__":  # Simple smoke test (non-Streamlit)
+
     pipe = get_or_create_rag_pipeline()
     print("Mode:", pipe.embedding_mode)
     added = pipe.bulk_ingest_default_datasets(per_file_limit=5)

@@ -1,11 +1,11 @@
-# content_detector.py
+
 import re
 import nltk
 import hashlib
 import streamlit as st
 from typing import Dict, Tuple, List
 
-# Download required NLTK data (safe to ignore if already present)
+
 try:
     nltk.download('punkt', quiet=True)
     nltk.download('stopwords', quiet=True)
@@ -31,14 +31,14 @@ def detect_content_type(text: str) -> Dict:
         }
 
     text = text.strip()
-    text_hash = hashlib.md5(text.encode()).hexdigest()[:8]  # Short hash for tracking
 
-    # Initialize scoring
+
+
     news_score = 0
     reasons = []
     content_type = "unknown"
 
-    # 1. Personal statements (negative)
+
     personal_patterns = [
         r'\b(my name is|i am|i\'m|hello|hi there|dear)\b',
         r'\b(i think|i believe|in my opinion|personally)\b',
@@ -51,7 +51,7 @@ def detect_content_type(text: str) -> Dict:
         reasons.append(f"Contains {personal_matches} personal statement patterns")
         content_type = "personal_statement"
 
-    # 2. Casual text
+
     casual_patterns = [
         r'^\s*(hello|hi|hey|yo)\s*[,!.]?\s*$',
         r'^\s*(ok|okay|yes|no|maybe)\s*[,!.]?\s*$',
@@ -64,7 +64,7 @@ def detect_content_type(text: str) -> Dict:
         reasons.append("Appears to be casual conversation")
         content_type = "casual_text"
 
-    # 3. Placeholder/test text
+
     test_patterns = [
         r'\b(test|testing|hello world|sample text|dummy)\b',
         r'\b(lorem ipsum|placeholder|example text)\b',
@@ -77,7 +77,7 @@ def detect_content_type(text: str) -> Dict:
         reasons.append("Contains test or placeholder patterns")
         content_type = "test_text"
 
-    # 4. News-related terms
+
     news_patterns = [
         r'\b(breaking|urgent|alert|developing|exclusive)\b',
         r'\b(reported|according to|sources say|officials|spokesperson|authorities)\b',
@@ -97,7 +97,7 @@ def detect_content_type(text: str) -> Dict:
         if content_type == "unknown":
             content_type = "news_like"
 
-    # 5. Proper nouns
+
     proper_noun_count = 0
     try:
         tokens = nltk.word_tokenize(text)
@@ -108,7 +108,7 @@ def detect_content_type(text: str) -> Dict:
             news_score += min(proper_noun_count * 4, 20)
             reasons.append(f"Contains {proper_noun_count} proper nouns")
     except Exception:
-        # Fallback capitalization check
+
         words = text.split()
         capitalized = [w for w in words if w and w[0].isupper()]
         proper_noun_count = len(capitalized)
@@ -116,7 +116,7 @@ def detect_content_type(text: str) -> Dict:
             news_score += min(proper_noun_count * 3, 15)
             reasons.append(f"Contains {proper_noun_count} capitalized words")
 
-    # 6. Length and structure
+
     word_count = len(text.split())
     sentence_count = len([s for s in text.split('.') if s.strip()])
     if word_count >= 50:
@@ -132,7 +132,7 @@ def detect_content_type(text: str) -> Dict:
         news_score -= 10
         reasons.append("Very short content")
 
-    # 7. Questions
+
     question_count = text.count('?')
     if question_count > 2:
         news_score -= 12
@@ -143,7 +143,7 @@ def detect_content_type(text: str) -> Dict:
         news_score -= 5
         reasons.append("Contains a question")
 
-    # 8. Formal structure
+
     if sentence_count >= 3:
         news_score += 8
         reasons.append("Multi-sentence structure")
@@ -151,13 +151,13 @@ def detect_content_type(text: str) -> Dict:
         news_score += 4
         reasons.append("Basic sentence structure")
 
-    # 9. Quotes
+
     quote_count = sum(len(re.findall(p, text)) for p in [r'"[^"]{10,}"', r"'[^']{10,}'"])
     if quote_count > 0:
         news_score += quote_count * 6
         reasons.append(f"Contains {quote_count} quotations")
 
-    # 10. Time/date
+
     time_patterns = [
         r'\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b',
         r'\b(january|february|march|april|may|june|july|august|september|october|november|december)\b',
@@ -169,7 +169,7 @@ def detect_content_type(text: str) -> Dict:
         news_score += min(time_matches * 5, 15)
         reasons.append(f"Contains {time_matches} time/date references")
 
-    # Final score
+
     news_score = max(0, min(100, news_score))
     confidence = news_score / 100
 
@@ -182,31 +182,13 @@ def detect_content_type(text: str) -> Dict:
         word_count >= 8
     )
 
-    # ------------------------------------------------------------------
-    # Alternate heuristic: Some legitimate analytical / investigative
-    # headlines or summaries lack our strict pattern keywords (e.g., no
-    # 'breaking', 'according to', etc.) but are still valid news-like
-    # content. Allow classification if:
-    #   - sufficient length (>= 12 words)
-    #   - at least 2 proper nouns (entities / capitalized words fallback)
-    #   - base score moderately high (>= 25)
-    #   - no strong disqualifiers (personal/casual/test)
-    # This reduces false negatives like the user's example headline.
-    # ------------------------------------------------------------------
-    if (not is_news and
-        word_count >= 12 and
-        proper_noun_count >= 2 and
-        news_score >= 25 and
-        personal_matches == 0 and
-        casual_matches == 0 and
-        test_matches == 0):
-        is_news = True
+
         reasons.append("Alternate heuristic: length + proper nouns + score indicates news-like content")
 
     if content_type == "unknown":
         content_type = "potential_news" if is_news else "non_news"
 
-    # Suggestions
+
     suggestions = []
     if not is_news:
         suggestions = [
