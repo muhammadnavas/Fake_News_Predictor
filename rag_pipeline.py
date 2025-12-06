@@ -270,7 +270,7 @@ class RAGPipeline:
                 api_key = os.getenv("GEMINI_API_KEY")
                 if api_key:
                     genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel("gemini-pro")
+                    model = genai.GenerativeModel("gemini-2.5-flash-latest")
                     context_block = "\n".join([f"- {c.content[:300]} (score={c.score:.2f})" for c in contexts])
                     prompt = f"""
 You are assisting in fake news verification. Given the user query and retrieved knowledge base contexts, produce a concise factual assessment (<= 120 words).

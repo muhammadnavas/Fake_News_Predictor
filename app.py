@@ -95,6 +95,23 @@ def _get_secret(name: str):
     except Exception:
         return None
 
+# ── Safe columns wrapper to avoid JavaScript errors ─────────────────────────────
+def safe_columns(spec, gap="small"):
+    """
+    Wrapper for st.columns() to avoid JavaScript 'vertical' property errors.
+    Explicitly specifies gap parameter to prevent undefined property access.
+    """
+    try:
+        if isinstance(spec, int):
+            # For integer spec, create equal-width columns with explicit gap
+            return st.columns(spec, gap=gap)
+        else:
+            # For list spec (custom widths), use explicit gap
+            return st.columns(spec, gap=gap)
+    except TypeError:
+        # Fallback for older Streamlit versions without gap parameter
+        return st.columns(spec)
+
 GEMINI_API_KEY = _get_secret("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
 NEWSAPI_KEY = _get_secret("NEWSAPI_KEY") or os.getenv("NEWSAPI_KEY")
 GNEWS_KEY = _get_secret("GNEWS_KEY") or os.getenv("GNEWS_KEY")
@@ -275,7 +292,7 @@ if input_text and input_text.strip():
             analysis_allowed = False
 
 # ── Analysis options (added missing Force Analysis) ─────────────────────────────
-c1, c2, c3, c4 = st.columns(4)
+c1, c2, c3, c4 = safe_columns(4)
 with c1:
     check_existence = st.checkbox("🔍 Multi-API Verification", value=True)
 with c2:
@@ -317,7 +334,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                         verification_results = None
 
                 if verification_results:
-                    col_a, col_b, col_c = st.columns(3)
+                    col_a, col_b, col_c = safe_columns(3)
                     with col_a:
                         st.metric("Sources Found", len(verification_results.get("sources_found", [])))
                     with col_b:
@@ -349,7 +366,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                         fact_analysis = analyze_against_facts(input_text, relevant_facts)
                         kb_confidence = calculate_kb_confidence(relevant_facts, fact_analysis)
 
-                    col_a, col_b, col_c = st.columns(3)
+                    col_a, col_b, col_c = safe_columns(3)
                     with col_a:
                         st.metric("Relevant Facts", len(relevant_facts))
                     with col_b:
@@ -389,7 +406,7 @@ if st.button("🚀 RAG-Enhanced Analysis", type="primary", use_container_width=T
                     st.markdown("---")
                     st.markdown("### ❓ Ask a Question (RAG QA)")
                     qa_query = st.text_input("Enter a claim or question to verify against knowledge base:", key="rag_qa_query")
-                    col_qa1, col_qa2, col_qa3 = st.columns([2,1,1])
+                    col_qa1, col_qa2, col_qa3 = safe_columns([2,1,1])
                     with col_qa1:
                         k_ctx = st.number_input("Top K Contexts", min_value=1, max_value=15, value=5)
                     with col_qa2:
@@ -663,7 +680,7 @@ with st.expander("🔧 System Information"):
                 "news_score": 0,
             }
 
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4 = safe_columns(4)
         with col1:
             st.metric("Characters", detailed.get("character_count", 0))
         with col2:
@@ -680,7 +697,7 @@ with st.expander("🔧 System Information"):
             st.write(f"• Current text hash: {content_analysis.get('text_hash', 'n/a')}")
             st.write(f"• Validation status: {content_analysis.get('validation_status', 'n/a')}")
     else:
-        col1, col2, col3, col4 = st.columns(4)
+        col1, col2, col3, col4 = safe_columns(4)
         with col1:
             st.metric("Characters", 0)
         with col2:
@@ -691,7 +708,7 @@ with st.expander("🔧 System Information"):
             st.metric("News Score", "0/100")
 
     # Reset buttons
-    rb1, rb2 = st.columns(2)
+    rb1, rb2 = safe_columns(2)
     with rb1:
         if st.button("🔄 Reset RAG System"):
             try:

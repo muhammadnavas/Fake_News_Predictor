@@ -668,7 +668,7 @@ def rag_enhanced_gemini_analysis(text: str, relevant_facts: List[Dict]) -> str:
             return "Gemini API key not available"
             
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash-latest')
         
         # Create context from relevant facts
         context = "\n".join([f"- {fact['content']} (Sources: {', '.join(fact.get('sources', []))})" 
@@ -706,7 +706,7 @@ def standard_gemini_analysis(text: str) -> str:
             return "Gemini API key not available"
             
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash-latest')
         
         prompt = f"""
         Analyze this news text for authenticity:

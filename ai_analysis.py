@@ -54,7 +54,7 @@ NEWSAPI_KEY = get_newsapi_key()
 if GEMINI_KEY:
     try:
         genai.configure(api_key=GEMINI_KEY)
-        model = genai.GenerativeModel("gemini-2.0-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash-latest")
     except Exception as e:
         model = None
 else:
@@ -126,7 +126,7 @@ Format your response clearly with headers and bullet points.
 """
 
     try:
-        response = model.generate_content(prompt)
+        response = model.generate_content(enhanced_prompt)
         return response.text.strip()
     except Exception as e:
         return f"❌ Error in RAG-enhanced analysis: {str(e)}"
