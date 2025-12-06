@@ -243,8 +243,8 @@ class RAGPipeline:
                 mode=self.embedding_mode,
             )
         # Simple heuristic synthesis
-        supporting = [c for c in contexts if c.metadata.get("verified")]  # Verified contexts
-        contradicting = [c for c in contexts if not c.metadata.get("verified")]  # Marked unverified
+        supporting = [c for c in contexts if str(c.metadata.get("verified", "False")).lower() in ["true", "1"]]
+        contradicting = [c for c in contexts if str(c.metadata.get("verified", "False")).lower() in ["false", "0"]]
         avg_score = sum(c.score for c in contexts) / max(1, len(contexts))
         if supporting and not contradicting:
             base_answer = "Query aligns with verified knowledge base facts."

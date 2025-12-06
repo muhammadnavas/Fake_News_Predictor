@@ -126,7 +126,7 @@ Format your response clearly with headers and bullet points.
 """
 
     try:
-        response = model.generate_content(enhanced_prompt)
+        response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
         return f"❌ Error in RAG-enhanced analysis: {str(e)}"
@@ -166,7 +166,7 @@ Format your response clearly with headers and bullet points.
 """
 
     try:
-        response = model.generate_content(enhanced_prompt)
+        response = model.generate_content(prompt)
         return response.text.strip()
     except Exception as e:
         return f"❌ Error in Gemini analysis: {str(e)}"

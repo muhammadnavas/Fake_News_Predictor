@@ -3,6 +3,7 @@ import requests
 from dotenv import load_dotenv
 import time
 from typing import List, Dict, Tuple, Optional
+from api_utils import is_valid_api_key, should_suppress_error
 
 # Load API keys from .env
 load_dotenv()
@@ -282,8 +283,11 @@ def check_newsapi_existence(news_text: str) -> Tuple[bool, List[Dict]]:
         
         return len(formatted_articles) > 0, formatted_articles
         
-    except Exception as e:
-        print(f"NewsAPI check failed: {e}")
+    except requests.exceptions.HTTPError as e:
+        if not should_suppress_error(e.response.status_code):
+            print(f"NewsAPI check failed: {e}")
+        return False, []
+    except Exception:
         return False, []
 
 
@@ -317,8 +321,11 @@ def check_gnews_existence(news_text: str) -> Tuple[bool, List[Dict]]:
         
         return len(formatted_articles) > 0, formatted_articles
         
-    except Exception as e:
-        print(f"GNews check failed: {e}")
+    except requests.exceptions.HTTPError as e:
+        if not should_suppress_error(e.response.status_code):
+            print(f"GNews check failed: {e}")
+        return False, []
+    except Exception:
         return False, []
     
 def check_contextualweb_existence(news_text: str, max_results: int = 10) -> Tuple[bool, List[Dict]]:
@@ -356,8 +363,11 @@ def check_contextualweb_existence(news_text: str, max_results: int = 10) -> Tupl
         
         return len(formatted_articles) > 0, formatted_articles
     
-    except Exception as e:
-        print(f"ContextualWeb check failed: {e}")
+    except requests.exceptions.HTTPError as e:
+        if not should_suppress_error(e.response.status_code):
+            print(f"ContextualWeb check failed: {e}")
+        return False, []
+    except Exception:
         return False, []
 
 def fetch_google_fact_checks(query: str):
@@ -424,8 +434,11 @@ def fetch_google_fact_checks(query="news", language="en", max_results=10):
             })
 
         return claims
-    except Exception as e:
-        print(f"❌ Could not fetch Google Fact Check claims: {e}")
+    except requests.exceptions.HTTPError as e:
+        if not should_suppress_error(e.response.status_code):
+            print(f"❌ Could not fetch Google Fact Check claims: {e}")
+        return []
+    except Exception:
         return []
 
 
@@ -459,8 +472,11 @@ def check_currents_existence(news_text: str) -> Tuple[bool, List[Dict]]:
         
         return len(formatted_articles) > 0, formatted_articles
         
-    except Exception as e:
-        print(f"CurrentsAPI check failed: {e}")
+    except requests.exceptions.HTTPError as e:
+        if not should_suppress_error(e.response.status_code):
+            print(f"CurrentsAPI check failed: {e}")
+        return False, []
+    except Exception:
         return False, []
 
 

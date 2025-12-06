@@ -58,7 +58,8 @@ def fetch_google_fact_checks(query: str = None, max_results: int = 10) -> List[D
     """
     Fetch fact check claims from Google Fact Check API
     """
-    if not GOOGLEFACT_KEY:
+    # Check if API key is missing or is a placeholder
+    if not GOOGLEFACT_KEY or "YOUR_" in GOOGLEFACT_KEY.upper() or "PLACEHOLDER" in GOOGLEFACT_KEY.upper():
         return []
         
     url = "https://factchecktools.googleapis.com/v1alpha1/claims:search"
@@ -92,8 +93,13 @@ def fetch_google_fact_checks(query: str = None, max_results: int = 10) -> List[D
                 
         return result_claims
         
+    except requests.exceptions.HTTPError as e:
+        # Only show warning for non-authentication errors
+        if e.response.status_code not in [400, 401, 403]:
+            st.warning(f"Could not fetch Google Fact Check claims: {e}")
+        return []
     except Exception as e:
-        st.warning(f"Could not fetch Google Fact Check claims: {e}")
+        # Silently fail for other errors (network issues, etc.)
         return []
 
 
@@ -161,8 +167,8 @@ class RAGKnowledgeBase:
                 self.use_fallback_rag()
                 return
 
-        # Fetch Google Fact Checks if API key is available
-        if GOOGLEFACT_KEY:
+        # Fetch Google Fact Checks if API key is available and valid
+        if GOOGLEFACT_KEY and "YOUR_" not in GOOGLEFACT_KEY.upper() and "PLACEHOLDER" not in GOOGLEFACT_KEY.upper():
             self.fetch_google_fact_checks_and_add()
 
     def use_fallback_rag(self):
@@ -246,8 +252,8 @@ class RAGKnowledgeBase:
             ids = [f['id'] for f in self.fact_database]
             metadatas = [
                 {
-                    "category": f['category'], 
-                    "verified": f['verified'],
+                    "category": str(f['category']), 
+                    "verified": str(f['verified']),
                     "sources": json.dumps(f.get('sources', []))
                 } 
                 for f in self.fact_database
@@ -303,8 +309,8 @@ class RAGKnowledgeBase:
                     documents=[content], 
                     embeddings=emb,
                     metadatas=[{
-                        "category": category, 
-                        "verified": verified,
+                        "category": str(category), 
+                        "verified": str(verified),
                         "sources": json.dumps(sources or [])
                     }], 
                     ids=[fact_id]
@@ -410,18 +416,37 @@ class RAGKnowledgeBase:
             st.warning("⚠️ No Google Fact Check claims fetched")
             return
 
+        added_count = 0
         for claim in claims:
             try:
                 if self.collection and self.embedding_model:
+                    # Check if claim already exists
+                    try:
+                        existing = self.collection.get(ids=[claim["id"]])
+                        if existing and existing.get('ids'):
+                            continue  # Skip duplicate
+                    except:
+                        pass  # Claim doesn't exist, proceed to add
+                    
+                    # Add claim with metadata
                     self.collection.add(
                         ids=[claim["id"]],
                         documents=[claim["text"]],
-                        embeddings=[self.embedding_model.encode(claim["text"]).tolist()]
+                        embeddings=[self.embedding_model.encode(claim["text"]).tolist()],
+                        metadatas=[{
+                            "category": "factcheck",
+                            "verified": "True",
+                            "sources": json.dumps(claim.get("sources", []))
+                        }]
                     )
+                    added_count += 1
             except Exception as e:
-                st.warning(f"Failed to add claim: {e}")
+                st.warning(f"Failed to add claim {claim.get('id', 'unknown')}: {e}")
 
-        st.toast(f"✅ Added {len(claims)} Google Fact Check claims to RAG KB")
+        if added_count > 0:
+            st.toast(f"✅ Added {added_count} new Google Fact Check claims to RAG KB")
+        else:
+            st.info("ℹ️ No new Google Fact Check claims added (may already exist)")
 
     def get_all_facts(self) -> List[Dict]:
         """Get all facts in the database"""
