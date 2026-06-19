@@ -343,7 +343,7 @@ if st.button("🚀 Analyse News", type="primary", use_container_width=True):
                     st.markdown(gemini_analysis)
 
                     import re
-                    match = re.search(r'RESULT:\s*\*?\s*(REAL|FAKE)', gemini_analysis or "", re.IGNORECASE)
+                    match = re.search(r'RESULT:[\s\*]*(REAL|FAKE)', gemini_analysis or "", re.IGNORECASE)
                     if match:
                         verdict = match.group(1).upper()
                         if verdict == "REAL":
@@ -410,7 +410,7 @@ if st.button("🚀 Analyse News", type="primary", use_container_width=True):
             # Gemini
             if use_gemini and "gemini_analysis" in locals() and gemini_analysis is not None:
                 import re
-                match = re.search(r'RESULT:\s*\*?\s*(REAL|FAKE)', gemini_analysis or "", re.IGNORECASE)
+                match = re.search(r'RESULT:[\s\*]*(REAL|FAKE)', gemini_analysis or "", re.IGNORECASE)
                 if match:
                     verdict = match.group(1).upper()
                     if verdict == "REAL":
