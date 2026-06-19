@@ -96,6 +96,8 @@ analyze this text:
 TEXT: "{news_text}"
 {facts_context}
 
+Note: Do not classify a text as FAKE simply because you cannot verify exact dates or specific numbers. Classify as FAKE only if there are clear signs of fabrication, extreme bias, conspiracy theories, or illogical inconsistencies.
+
 Provide exactly one short paragraph summarizing your analysis of credibility, contradictions with established facts, and red flags.
 Then, on a new line, provide the final result in this exact format:
 **RESULT:** [REAL or FAKE] (Confidence: [High/Medium/Low])
@@ -117,6 +119,8 @@ def standard_gemini_analysis(news_text: str) -> str:
 As an expert fact-checker and news analyst, analyze this text:
 
 TEXT: "{news_text}"
+
+Note: Do not classify a text as FAKE simply because you cannot verify exact dates or specific numbers. Classify as FAKE only if there are clear signs of fabrication, extreme bias, conspiracy theories, or illogical inconsistencies.
 
 Provide exactly one short paragraph summarizing your analysis of credibility, red flags, and consistency.
 Then, on a new line, provide the final result in this exact format:
