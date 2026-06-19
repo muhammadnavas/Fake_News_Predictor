@@ -1,14 +1,12 @@
 # Fake News Predictor
 
-A multi-source, RAG-enhanced fake news detection system using ML models, retrieval-augmented generation, and AI-powered analysis. Combines news API verification, knowledge base retrieval, and advanced analytics in a Streamlit web app.
+A multi-source fake news detection system using ML models and AI-powered analysis. Combines news API verification and advanced analytics in a Streamlit web app.
 
 ## Features
 - **Multi-API News Verification**: Checks news existence across NewsAPI, GNews, CurrentsAPI, ContextualWeb, and Google Fact Check.
-- **RAG Knowledge Base**: Ingests facts from datasets and APIs, supports semantic retrieval (ChromaDB + SentenceTransformers, TF-IDF fallback).
 - **ML Model Analysis**: Uses multiple trained models (Naive Bayes, Logistic Regression, Random Forest, CatBoost) for prediction.
 - **AI Assessment**: Integrates Gemini AI for deep analysis.
 - **Content Validation**: Ensures only news-like content is analyzed.
-- **Bulk Dataset Ingestion**: Supports streaming ingestion from large CSVs (True.csv, Fake.csv).
 
 ## Setup
 1. **Clone the repository**
@@ -38,9 +36,8 @@ A multi-source, RAG-enhanced fake news detection system using ML models, retriev
 
 ## Usage
 - Enter a news headline or article in the input box.
-- The app validates content and runs analysis using selected methods (API, RAG, ML, AI).
-- View results in tabs: Verification, RAG Analysis, ML Models, AI Assessment, Summary.
-- Use the sidebar to ingest datasets and manage the knowledge base.
+- The app validates content and runs analysis using selected methods (API, ML, AI).
+- View results in tabs: Verification, ML Models, AI Assessment, Summary.
 
 ## Troubleshooting
 - **No news fetched**: Ensure API keys are set and match expected names in both secrets and code.
@@ -54,13 +51,10 @@ A multi-source, RAG-enhanced fake news detection system using ML models, retriev
 
 ## Project Structure
 - `app.py` — Main Streamlit app
-- `rag_system.py`, `rag_pipeline.py` — RAG logic and pipeline
 - `ml_analysis.py` — ML model loading and analysis
 - `content_detector.py` — Content validation
 - `fetch_news.py` — News API integration
 - `models/` — Pretrained ML models
-- `chroma_db/` — ChromaDB persistent storage
-- `fact_database.json` — Knowledge base facts
 
 ## License
 MIT (or specify your license)
@@ -72,7 +66,7 @@ MIT (or specify your license)
 
 ## Credits
 - Built by MrHidey (muhammadnavas) and contributors
-- Uses open-source libraries: Streamlit, scikit-learn, chromadb, sentence-transformers, Google Generative AI, etc.
+- Uses open-source libraries: Streamlit, scikit-learn, Google Generative AI, etc.
 
 ---
 For questions or contributions, open an issue or pull request at the GitHub repository.
