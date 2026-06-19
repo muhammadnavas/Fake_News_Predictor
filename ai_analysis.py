@@ -7,7 +7,7 @@ try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
-
+    pass
 
 
 def get_gemini_key() -> str:
@@ -54,7 +54,7 @@ NEWSAPI_KEY = get_newsapi_key()
 if GEMINI_KEY:
     try:
         genai.configure(api_key=GEMINI_KEY)
-        model = genai.GenerativeModel("gemini-2.5-flash-latest")
+        model = genai.GenerativeModel("gemini-2.5-flash")
     except Exception as e:
         model = None
 else:
@@ -174,16 +174,16 @@ Format your response clearly with headers and bullet points.
 
 def validate_api_keys():
     """Validate and print all API key statuses for debugging."""
-    print("🔍 API Key Validation:")
+    print("[*] API Key Validation:")
     
 
     gemini_api = os.getenv("GEMINI_API")
     gemini_api_key = os.getenv("GEMINI_API_KEY")
     newsapi_key = os.getenv("NEWSAPI_KEY")
     
-    print(f"GEMINI_API: {'✅ Found' if gemini_api else '❌ Missing'}")
-    print(f"GEMINI_API_KEY: {'✅ Found' if gemini_api_key else '❌ Missing'}")
-    print(f"NEWSAPI_KEY: {'✅ Found' if newsapi_key else '❌ Missing'}")
+    print(f"GEMINI_API: {'[OK] Found' if gemini_api else '[--] Missing'}")
+    print(f"GEMINI_API_KEY: {'[OK] Found' if gemini_api_key else '[--] Missing'}")
+    print(f"NEWSAPI_KEY: {'[OK] Found' if newsapi_key else '[--] Missing'}")
     
 
     try:

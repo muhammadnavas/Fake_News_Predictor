@@ -334,7 +334,8 @@ def check_contextualweb_existence(news_text: str, max_results: int = 10) -> Tupl
         return False, []
     
     url = "https://contextualwebsearch-websearch-v1.p.rapidapi.com/api/search/NewsSearchAPI"
-
+    params = {
+        "q": news_text[:100],
         "pageNumber": 1,
         "pageSize": max_results,
         "autoCorrect": "true",

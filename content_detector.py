@@ -31,7 +31,7 @@ def detect_content_type(text: str) -> Dict:
         }
 
     text = text.strip()
-
+    text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
 
 
     news_score = 0
@@ -182,7 +182,8 @@ def detect_content_type(text: str) -> Dict:
         word_count >= 8
     )
 
-
+    if not is_news and news_score >= 25 and proper_noun_count >= 2 and word_count >= 8:
+        is_news = True
         reasons.append("Alternate heuristic: length + proper nouns + score indicates news-like content")
 
     if content_type == "unknown":
