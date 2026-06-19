@@ -342,11 +342,14 @@ if st.button("🚀 Analyse News", type="primary", use_container_width=True):
                     st.markdown("### 🤖 Gemini AI Detailed Analysis")
                     st.markdown(gemini_analysis)
 
-                    upper = (gemini_analysis or "").upper()
-                    if "REAL" in upper:
-                        st.success("🎯 **Gemini Assessment: REAL NEWS**")
-                    elif "FAKE" in upper:
-                        st.error("🎯 **Gemini Assessment: FAKE NEWS**")
+                    import re
+                    match = re.search(r'RESULT:\s*\*?\s*(REAL|FAKE)', gemini_analysis or "", re.IGNORECASE)
+                    if match:
+                        verdict = match.group(1).upper()
+                        if verdict == "REAL":
+                            st.success("🎯 **Gemini Assessment: REAL NEWS**")
+                        else:
+                            st.error("🎯 **Gemini Assessment: FAKE NEWS**")
                     else:
                         st.warning("🎯 **Gemini Assessment: INCONCLUSIVE**")
                 except Exception as e:
@@ -406,11 +409,14 @@ if st.button("🚀 Analyse News", type="primary", use_container_width=True):
 
             # Gemini
             if use_gemini and "gemini_analysis" in locals() and gemini_analysis is not None:
-                up = gemini_analysis.upper()
-                if "REAL" in up:
-                    summary_rows.append(["Gemini AI", "REAL", "AI analysis indicates authentic news"])
-                elif "FAKE" in up:
-                    summary_rows.append(["Gemini AI", "FAKE", "AI analysis indicates fake news"])
+                import re
+                match = re.search(r'RESULT:\s*\*?\s*(REAL|FAKE)', gemini_analysis or "", re.IGNORECASE)
+                if match:
+                    verdict = match.group(1).upper()
+                    if verdict == "REAL":
+                        summary_rows.append(["Gemini AI", "REAL", "AI analysis indicates authentic news"])
+                    else:
+                        summary_rows.append(["Gemini AI", "FAKE", "AI analysis indicates fake news"])
                 else:
                     summary_rows.append(["Gemini AI", "UNCERTAIN", "AI analysis inconclusive"])
 
