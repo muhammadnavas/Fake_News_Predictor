@@ -5,7 +5,7 @@ import google.generativeai as genai
 
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    load_dotenv(override=True)
 except ImportError:
     pass
 
@@ -91,38 +91,14 @@ def rag_enhanced_gemini_analysis(news_text: str, relevant_facts: List[Dict]) -> 
 
     enhanced_prompt = f"""
 As an expert fact-checker and news analyst with access to a knowledge base, 
-provide a comprehensive analysis of this text:
+analyze this text:
 
 TEXT: "{news_text}"
 {facts_context}
 
-Analyze the following aspects:
-
-1. **CLASSIFICATION**: Is this REAL or FAKE news? Provide your confidence level (High/Medium/Low).
-
-2. **KNOWLEDGE BASE ANALYSIS**: 
-- How does this text relate to the retrieved facts from our knowledge base?
-- Are there any contradictions with established facts?
-- What supporting or conflicting evidence do we have?
-
-3. **CREDIBILITY INDICATORS**:
-- Source reliability signals
-- Writing style and tone analysis
-- Presence of sensational or biased language
-- Factual consistency and logical coherence
-
-4. **RED FLAGS**: Identify any warning signs of misinformation:
-- Emotional manipulation techniques
-- Unsupported claims or statistics
-- Conspiracy theory elements
-- Clickbait characteristics
-
-5. **VERIFICATION SUGGESTIONS**: How could this be independently verified?
-
-6. **OVERALL ASSESSMENT**: Provide a final verdict with reasoning, 
-considering both the text analysis and knowledge base facts.
-
-Format your response clearly with headers and bullet points.
+Provide exactly one short paragraph summarizing your analysis of credibility, contradictions with established facts, and red flags.
+Then, on a new line, provide the final result in this exact format:
+**RESULT:** [REAL or FAKE] (Confidence: [High/Medium/Low])
 """
 
     try:
@@ -138,31 +114,13 @@ def standard_gemini_analysis(news_text: str) -> str:
         return "⚠️ Gemini analysis unavailable. Please configure GEMINI_API_KEY in Streamlit secrets."
 
     prompt = f"""
-As an expert fact-checker and news analyst, provide a comprehensive analysis of this text:
+As an expert fact-checker and news analyst, analyze this text:
 
 TEXT: "{news_text}"
 
-Analyze the following aspects:
-
-1. **CLASSIFICATION**: Is this REAL or FAKE news? Provide your confidence level (High/Medium/Low).
-
-2. **CREDIBILITY INDICATORS**:
-- Source reliability signals
-- Writing style and tone analysis
-- Presence of sensational or biased language
-- Factual consistency and logical coherence
-
-3. **RED FLAGS**: Identify any warning signs of misinformation:
-- Emotional manipulation techniques
-- Unsupported claims or statistics
-- Conspiracy theory elements
-- Clickbait characteristics
-
-4. **VERIFICATION SUGGESTIONS**: How could this be independently verified?
-
-5. **OVERALL ASSESSMENT**: Provide a final verdict with reasoning.
-
-Format your response clearly with headers and bullet points.
+Provide exactly one short paragraph summarizing your analysis of credibility, red flags, and consistency.
+Then, on a new line, provide the final result in this exact format:
+**RESULT:** [REAL or FAKE] (Confidence: [High/Medium/Low])
 """
 
     try:
@@ -190,14 +148,14 @@ def validate_api_keys():
         import streamlit as st
         gemini_secret = st.secrets.get("GEMINI_API", None) or st.secrets.get("GEMINI_API_KEY", None)
         newsapi_secret = st.secrets.get("NEWSAPI_KEY", None)
-        print(f"Streamlit Gemini Secret: {'✅ Found' if gemini_secret else '❌ Missing'}")
-        print(f"Streamlit NewsAPI Secret: {'✅ Found' if newsapi_secret else '❌ Missing'}")
+        print(f"Streamlit Gemini Secret: {'[OK] Found' if gemini_secret else '[--] Missing'}")
+        print(f"Streamlit NewsAPI Secret: {'[OK] Found' if newsapi_secret else '[--] Missing'}")
     except:
         print("Streamlit secrets: Not available (running locally)")
     
-    print(f"Final GEMINI_KEY: {'✅ Available' if GEMINI_KEY else '❌ Missing'}")
-    print(f"Final NEWSAPI_KEY: {'✅ Available' if NEWSAPI_KEY else '❌ Missing'}")
-    print(f"Gemini Model: {'✅ Initialized' if model else '❌ Failed'}")
+    print(f"Final GEMINI_KEY: {'[OK] Available' if GEMINI_KEY else '[--] Missing'}")
+    print(f"Final NEWSAPI_KEY: {'[OK] Available' if NEWSAPI_KEY else '[--] Missing'}")
+    print(f"Gemini Model: {'[OK] Initialized' if model else '[--] Failed'}")
 
 
 def display_api_status():

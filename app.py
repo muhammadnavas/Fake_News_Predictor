@@ -86,6 +86,21 @@ if missing_keys:
     st.stop()
 
 
+st.markdown("""
+    <style>
+        .block-container {
+            padding-top: 2rem;
+            padding-bottom: 1rem;
+        }
+        /* Reduce padding specifically for the main title */
+        h1 {
+            padding-top: 0rem !important;
+            margin-top: 0rem !important;
+            padding-bottom: 0rem !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("🔍 Fake News Predictor")
 st.markdown("**Multi-API News Verification** • **ML-Powered Assessment** • **AI-Powered Assessment**")
 st.markdown("---")
@@ -188,13 +203,9 @@ if input_text and input_text.strip():
 
 
 # ── Options ───────────────────────────────────────────────────────────────────
-c1, c2, c3 = safe_columns(3)
-with c1:
-    check_existence = st.checkbox("🔍 Multi-API Verification", value=True)
-with c2:
-    use_gemini = st.checkbox("🤖 Gemini AI Analysis", value=True)
-with c3:
-    advanced_analysis = st.checkbox("📊 Advanced Analytics", value=True)
+check_existence = True
+use_gemini = True
+advanced_analysis = True
 
 
 # ── Analyse Button ────────────────────────────────────────────────────────────
